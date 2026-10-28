@@ -1,0 +1,147 @@
+# ============================================================
+# configs/config.yaml – Konfigurasi terpusat proyek
+# Semua path, seed, dan hyperparameter ada di sini.
+# Jangan hardcode nilai apapun di dalam kode src/.
+# ============================================================
+
+# --- Reproducibility ---
+seed: 42
+
+# --- Path Data ---
+paths:
+  raw_dir:       "data/raw"
+  interim_dir:   "data/interim"
+  processed_dir: "data/processed"
+  labeled_dir:   "data/labeled"
+  reports_dir:   "reports"
+  figures_dir:   "reports/figures"
+  tables_dir:    "reports/tables"
+  models_dir:    "models"
+  logs_dir:      "logs"
+
+  # Kamus & Lexicon
+  slang_dict:    "data/interim/slang_dict.json"
+  inset_lexicon: "data/interim/inset_lexicon.tsv"
+
+# --- Platform & Kata Kunci Pencarian ---
+platforms:
+  - twitter
+  - youtube
+  - instagram
+
+search_keywords:
+  - "Undiksha"
+  - "#undiksha"
+  - "@undiksha"
+  - "Universitas Pendidikan Ganesha"
+  - "undiksha singaraja"
+  - "undiksha denpasar"
+  - "UKT undiksha"
+  - "SNBP undiksha"
+  - "SNBT undiksha"
+  - "mandiri undiksha"
+  - "mahasiswa undiksha"
+  - "dosen undiksha"
+  - "KKN undiksha"
+  - "wisuda undiksha"
+
+# --- Aspek Reputasi ---
+aspects:
+  akademik:
+    keywords: ["dosen", "kurikulum", "akreditasi", "ranking", "kelas", "mata kuliah", "ilmu"]
+  penerimaan_biaya:
+    keywords: ["SNBP", "SNBT", "mandiri", "UKT", "beasiswa", "daftar", "PMB"]
+  fasilitas:
+    keywords: ["kampus", "perpustakaan", "wifi", "asrama", "kos", "gedung", "lab"]
+  layanan_administrasi:
+    keywords: ["SIAKAD", "birokrasi", "admin", "pelayanan", "respons", "surat"]
+  kemahasiswaan:
+    keywords: ["organisasi", "prestasi", "kegiatan", "KKN", "BEM", "UKM", "lomba"]
+  lulusan_karier:
+    keywords: ["alumni", "kerja", "penyerapan", "lulus", "wisuda", "IPK"]
+  isu_citra:
+    keywords: ["viral", "berita", "kasus", "kebijakan", "skandal", "reputasi"]
+
+# --- Split Data ---
+split:
+  test_size: 0.15
+  val_size:  0.15
+  stratify:  true     # Stratified berdasarkan label sentimen
+
+# --- Label Sentimen ---
+labels:
+  positif: 1
+  netral:  0
+  negatif: -1
+
+# --- Preprocessing ---
+preprocessing:
+  min_token_length: 2
+  max_text_length:  512    # Token maksimum untuk BERT
+  remove_stopwords: true
+  apply_stemming:   true
+
+# --- TF-IDF ---
+tfidf:
+  max_features: 10000
+  ngram_range:  [1, 2]
+  sublinear_tf: true
+
+# --- Model ML Klasik ---
+classical_models:
+  svm:
+    kernel: "rbf"
+    C: 1.0
+    class_weight: "balanced"
+    probability: true
+  naive_bayes:
+    alpha: 1.0
+  random_forest:
+    n_estimators: 200
+    max_depth: null
+    class_weight: "balanced"
+  xgboost:
+    n_estimators: 150
+    max_depth: 6
+    learning_rate: 0.1
+    subsample: 0.8
+    colsample_bytree: 0.8
+    eval_metric: "mlogloss"
+
+# --- BERT / IndoBERT ---
+bert:
+  model_name:        "indobenchmark/indobert-base-p1"
+  max_length:        128
+  batch_size:        16
+  num_epochs:        5
+  learning_rate:     2.0e-5
+  warmup_ratio:      0.1
+  weight_decay:      0.01
+  gradient_clip:     1.0
+  fp16:              false   # Set true jika GPU mendukung
+
+# --- Ensemble ---
+ensemble:
+  method:          "stacking"    # "stacking" atau "soft_voting"
+  meta_learner:    "logistic_regression"
+  cv_folds:        5             # Untuk out-of-fold stacking
+
+# --- SMOTE ---
+imbalance:
+  method:         "smote"        # "smote", "class_weight", atau "none"
+  k_neighbors:    5
+
+# --- Evaluasi ---
+evaluation:
+  cv_folds:        5
+  metrics:
+    - accuracy
+    - precision_macro
+    - recall_macro
+    - f1_macro
+
+# --- Logging ---
+logging:
+  level:   "INFO"    # DEBUG, INFO, WARNING, ERROR
+  format:  "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+  to_file: true

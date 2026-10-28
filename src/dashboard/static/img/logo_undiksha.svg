@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="100%" height="100%">
+  <!-- Background Shield/Circle -->
+  <defs>
+    <linearGradient id="undikshaGold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FBBF24" />
+      <stop offset="100%" stop-color="#D97706" />
+    </linearGradient>
+    <linearGradient id="undikshaBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1E3A8A" />
+      <stop offset="100%" stop-color="#0F172A" />
+    </linearGradient>
+    <linearGradient id="undikshaCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38BDF8" />
+      <stop offset="100%" stop-color="#2563EB" />
+    </linearGradient>
+  </defs>
+
+  <!-- Outer Ring with Lotus Petals -->
+  <circle cx="60" cy="60" r="56" fill="url(#undikshaBlue)" stroke="url(#undikshaGold)" stroke-width="3"/>
+  <circle cx="60" cy="60" r="48" fill="none" stroke="#FBBF24" stroke-width="1.5" stroke-dasharray="3,2"/>
+  
+  <!-- Stylized Lotus Base -->
+  <path d="M 30 78 Q 60 92 90 78 Q 60 84 30 78 Z" fill="url(#undikshaGold)"/>
+  <path d="M 38 72 Q 60 82 82 72 Q 60 76 38 72 Z" fill="#FDE68A"/>
+
+  <!-- Ganesha Silhouette / Stylized Wisdom Motif -->
+  <!-- Crown / Mukuta -->
+  <polygon points="60,20 68,34 52,34" fill="url(#undikshaGold)"/>
+  <circle cx="60" cy="22" r="3" fill="#FFF"/>
+
+  <!-- Head / Ears -->
+  <ellipse cx="60" cy="42" rx="16" ry="14" fill="#FFFFFF"/>
+  <path d="M 44 38 Q 36 34 38 46 Q 42 50 48 44 Z" fill="url(#undikshaGold)"/>
+  <path d="M 76 38 Q 84 34 82 46 Q 78 50 72 44 Z" fill="url(#undikshaGold)"/>
+
+  <!-- Trunk (Belalai) -->
+  <path d="M 58 44 Q 62 56 60 62 Q 56 66 50 63 Q 48 59 52 57 Q 56 57 56 50" fill="none" stroke="url(#undikshaGold)" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- Third Eye / Bindi & Wisdom Accent -->
+  <circle cx="60" cy="38" r="2.5" fill="#DC2626"/>
+  <path d="M 55 34 Q 60 31 65 34" fill="none" stroke="#D97706" stroke-width="1.5"/>
+
+  <!-- Book / Knowledge Scroll Base -->
+  <path d="M 46 72 Q 60 67 74 72 L 74 76 Q 60 71 46 76 Z" fill="#38BDF8"/>
+
+  <!-- Subtle Inner Border -->
+  <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
+</svg>

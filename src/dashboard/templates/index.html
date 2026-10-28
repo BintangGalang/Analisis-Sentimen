@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Monitoring Reputasi Undiksha | Hybrid Ensemble AI</title>
+  <meta name="description" content="Dashboard Analisis Sentimen & Monitoring Reputasi Kampus Universitas Pendidikan Ganesha (Undiksha) berbasis Hybrid Ensemble (InSet + ML Klasik + IndoBERT).">
+  
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- App Main Wrapper -->
+  <div class="app-layout">
+
+    <!-- ──────────────── SIDEBAR NAVIGATION ──────────────── -->
+    <aside class="app-sidebar" id="app-sidebar">
+      <!-- Brand Area -->
+      <div class="sidebar-brand">
+        <div class="brand-logo-wrapper">
+          <img src="/static/img/logo_undiksha.svg" alt="Logo Undiksha" class="brand-logo" id="sidebar-logo">
+        </div>
+        <div class="brand-details">
+          <h2 class="brand-name">Undiksha Reputasi</h2>
+          <span class="brand-tag">UPT TIK UNDIKSHA</span>
+        </div>
+        <button class="sidebar-close-btn" id="btn-sidebar-close" aria-label="Tutup Menu">✕</button>
+      </div>
+
+      <!-- Navigation Section -->
+      <div class="sidebar-nav-container">
+        <span class="sidebar-nav-heading">MENU NAVIGASI</span>
+        <nav class="sidebar-menu" id="sidebar-nav">
+          <button class="sidebar-nav-item tab-btn active" data-tab="tab-overview" id="btn-tab-overview">
+            <span class="nav-icon">📊</span>
+            <span class="nav-label">Ringkasan & Metrik</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-aspects" id="btn-tab-aspects">
+            <span class="nav-icon">🏛️</span>
+            <span class="nav-label">Analisis 7 Aspek</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-evaluation" id="btn-tab-evaluation">
+            <span class="nav-icon">🏆</span>
+            <span class="nav-label">Kinerja Model AI</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-predictor" id="btn-tab-predictor">
+            <span class="nav-icon">⚡</span>
+            <span class="nav-label">Live Sentiment Predictor</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-explorer" id="btn-tab-explorer">
+            <span class="nav-icon">🔍</span>
+            <span class="nav-label">Data Explorer Real</span>
+            <span class="nav-indicator"></span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Quick Platform Counter Box -->
+      <div class="sidebar-summary-card">
+        <div class="summary-card-header">
+          <span class="pulse-dot"></span>
+          <span class="summary-status">3 PLATFORM REAL</span>
+        </div>
+        <div class="summary-platforms-list">
+          <div class="platform-mini-pill"><span class="pill-dot ig"></span> Instagram: <strong>1.499</strong></div>
+          <div class="platform-mini-pill"><span class="pill-dot yt"></span> YouTube: <strong>3.926</strong></div>
+          <div class="platform-mini-pill"><span class="pill-dot tw"></span> Twitter/X: <strong>866</strong></div>
+        </div>
+        <div class="summary-total-badge">
+          <span>Total Valid:</span>
+          <strong>6.291 Data Real</strong>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer -->
+      <div class="sidebar-footer">
+        <p>&copy; 2026 UPT TIK Undiksha</p>
+        <span class="version-label">Hybrid Ensemble v2.4</span>
+      </div>
+    </aside>
+
+    <!-- Overlay Backdrop for Mobile -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop"></div>
+
+    <!-- ──────────────── MAIN VIEWPORT ──────────────── -->
+    <div class="main-wrapper">
+
+      <!-- Top Header Bar -->
+      <header class="top-header">
+        <div class="header-left">
+          <button class="sidebar-toggle-btn" id="btn-sidebar-toggle" aria-label="Buka Menu Sidebar">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+          </button>
+          <div class="header-breadcrumb">
+            <span class="crumb-root">Sistem Pemantauan Reputasi Undiksha</span>
+            <span class="crumb-separator">/</span>
+            <span class="crumb-active" id="active-crumb-title">Ringkasan & Metrik</span>
+          </div>
+        </div>
+
+        <div class="header-right">
+          <div class="system-status-badge">
+            <span class="pulse-dot"></span>
+            <span class="badge-text">SISTEM AKTIF &bull; 100% DATA REAL</span>
+          </div>
+        </div>
+      </header>
+
+      <!-- Dashboard Scrollable Body -->
+      <main class="dashboard-body">
+
+        <!-- ──────────────── TAB 1: OVERVIEW & GRAFIK ──────────────── -->
+        <section class="tab-pane active" id="tab-overview">
+
+          <!-- Filter Card Panel -->
+          <section class="filter-panel" id="filter-section">
+          <div class="filter-panel-header">
+            <span class="filter-icon">⚙️</span>
+            <span class="filter-heading">Filter Analisis Terpadu:</span>
+          </div>
+          <div class="filter-controls-grid">
+            <div class="filter-box">
+              <label for="filter-platform">Platform Media Sosial</label>
+              <select id="filter-platform" class="styled-select">
+                <option value="all">Semua Platform (Instagram, YouTube, Twitter)</option>
+                {% for p in platforms %}
+                <option value="{{ p }}">{{ p|upper }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="filter-box">
+              <label for="filter-aspect">Aspek Reputasi Kampus</label>
+              <select id="filter-aspect" class="styled-select">
+                <option value="all">Semua Aspek (7 Aspek)</option>
+                {% for a in aspects %}
+                <option value="{{ a }}">{{ a|replace('_', ' ')|title }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="filter-box">
+              <label for="filter-sentiment">Klasifikasi Sentimen</label>
+              <select id="filter-sentiment" class="styled-select">
+                <option value="all">Semua Sentimen (Positif, Netral, Negatif)</option>
+                <option value="positif">Positif (Apresiasi)</option>
+                <option value="netral">Netral (Informasi)</option>
+                <option value="negatif">Negatif (Keluhan)</option>
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <!-- KPI Metric Cards Grid -->
+        <section class="kpi-grid" id="kpi-section">
+          <!-- Total Opini -->
+          <div class="kpi-card card-primary" id="card-total">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Total Opini Teranalisis</span>
+              <span class="kpi-icon-wrap bg-blue">📊</span>
+            </div>
+            <div class="kpi-main-val" id="kpi-total">{{ total_data }}</div>
+            <div class="kpi-card-footer">
+              <span>Instagram, YouTube & Twitter/X</span>
+            </div>
+          </div>
+
+          <!-- Indeks Reputasi -->
+          <div class="kpi-card card-reputation" id="card-rep">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Indeks Reputasi Undiksha</span>
+              <span class="kpi-icon-wrap bg-emerald">🎓</span>
+            </div>
+            <div class="kpi-main-val text-rep" id="kpi-rep-idx">+38.81%</div>
+            <div class="kpi-card-footer">
+              <span class="kpi-status-badge badge-pos" id="kpi-predikat">Positif (Apresiasi Baik)</span>
+            </div>
+          </div>
+
+          <!-- Sentimen Positif -->
+          <div class="kpi-card card-positive" id="card-pos">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Opini Positif (Apresiasi)</span>
+              <span class="kpi-icon-wrap bg-green">👍</span>
+            </div>
+            <div class="kpi-main-val text-green" id="kpi-pos">-</div>
+            <div class="kpi-card-footer">
+              <span>Prestasi, Dosen & Suasana Kampus</span>
+            </div>
+          </div>
+
+          <!-- Sentimen Netral -->
+          <div class="kpi-card card-neutral" id="card-net">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Opini Netral (Informasi)</span>
+              <span class="kpi-icon-wrap bg-slate">ℹ️</span>
+            </div>
+            <div class="kpi-main-val text-slate" id="kpi-net">-</div>
+            <div class="kpi-card-footer">
+              <span>Jadwal, Pengumuman & Pertanyaan</span>
+            </div>
+          </div>
+
+          <!-- Sentimen Negatif -->
+          <div class="kpi-card card-negative" id="card-neg">
+            <div class="kpi-card-header">
+              <span class="kpi-title">Opini Negatif (Keluhan)</span>
+              <span class="kpi-icon-wrap bg-red">⚠️</span>
+            </div>
+            <div class="kpi-main-val text-red" id="kpi-neg">-</div>
+            <div class="kpi-card-footer">
+              <span>SIAKAD, Fasilitas Wifi & UKT</span>
+            </div>
+          </div>
+        </section>
+
+          <div class="charts-duo-grid">
+            <!-- Donut Chart Proporsi Sentimen -->
+            <div class="modern-card chart-card">
+              <div class="card-head">
+                <div>
+                  <h3 class="card-title">Proporsi Distribusi Sentimen</h3>
+                  <p class="card-subtitle">Komposisi opini publik real-time berdasarkan filter aktif</p>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-sentiment-donut"></canvas>
+              </div>
+            </div>
+
+            <!-- Horizontal Bar Chart Indeks Reputasi per Aspek -->
+            <div class="modern-card chart-card">
+              <div class="card-head">
+                <div>
+                  <h3 class="card-title">Indeks Reputasi Berdasarkan 7 Aspek Kampus</h3>
+                  <p class="card-subtitle">Formula Indeks = (Positif - Negatif) / Total [-100% s.d. +100%]</p>
+                </div>
+              </div>
+              <div class="chart-wrapper">
+                <canvas id="chart-aspect-bar"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visualisasi Perbandingan Model Publikasi -->
+          <div class="modern-card" style="margin-top: 1.5rem;">
+            <div class="card-head">
+              <div>
+                <h3 class="card-title">Grafik Perbandingan Kinerja Model Publikasi (5-Fold Stratified CV)</h3>
+                <p class="card-subtitle">Evaluasi resolusi tinggi 300 DPI siap dilampirkan ke Laporan Magang</p>
+              </div>
+            </div>
+            <div class="image-center-box">
+              <img src="/figures/model_comparison_chart.png" alt="Grafik Perbandingan Model" class="responsive-preview-img" id="img-model-comp">
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB 2: ANALISIS ASPEK & WORD CLOUD ──────────────── -->
+        <section class="tab-pane" id="tab-aspects">
+          <div class="modern-card" style="margin-bottom: 2rem;">
+            <div class="card-head">
+              <div>
+                <h3 class="card-title">Komposisi Sentimen Lintas 7 Aspek Reputasi Undiksha</h3>
+                <p class="card-subtitle">100% Stacked bar chart: Citra Umum, Kemahasiswaan, Fasilitas, Layanan, Biaya, Akademik, Karier</p>
+              </div>
+            </div>
+            <div class="image-center-box">
+              <img src="/figures/aspect_sentiment_breakdown.png" alt="Breakdown Aspek" class="responsive-preview-img" id="img-aspect-breakdown">
+            </div>
+          </div>
+
+          <!-- Galeri Word Cloud -->
+          <div class="section-title-wrap">
+            <h3 class="section-title">Analisis Kata Kunci Opini Publik (Word Cloud 300 DPI)</h3>
+          </div>
+          <div class="wordcloud-grid">
+            <div class="wordcloud-item">
+              <div class="wordcloud-img-wrap">
+                <img src="/figures/wordcloud_positif.png" alt="Word Cloud Positif">
+              </div>
+              <div class="wordcloud-caption">✅ Sentimen Positif: Apresiasi, Kebanggaan, Semangat Mahasiswa</div>
+            </div>
+            <div class="wordcloud-item">
+              <div class="wordcloud-img-wrap">
+                <img src="/figures/wordcloud_netral.png" alt="Word Cloud Netral">
+              </div>
+              <div class="wordcloud-caption">ℹ️ Sentimen Netral: KRS, Jadwal, Informasi PMB & Pendaftaran</div>
+            </div>
+            <div class="wordcloud-item">
+              <div class="wordcloud-img-wrap">
+                <img src="/figures/wordcloud_negatif.png" alt="Word Cloud Negatif">
+              </div>
+              <div class="wordcloud-caption">⚠️ Sentimen Negatif: SIAKAD, Server, Wifi, UKT & Kendala Sistem</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB 3: EVALUASI MODEL AI ──────────────── -->
+        <section class="tab-pane" id="tab-evaluation">
+          <div class="modern-card" style="margin-bottom: 2rem;">
+            <div class="card-head">
+              <div>
+                <h3 class="card-title">Tabel Evaluasi Komparatif Arsitektur Model (5-Fold Stratified CV)</h3>
+                <p class="card-subtitle">Pengujian komprehensif pada dataset berlabel multi-platform</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="styled-table" id="table-model-comp">
+                <thead>
+                  <tr>
+                    <th>Arsitektur Model</th>
+                    <th>Accuracy</th>
+                    <th>Precision-Macro</th>
+                    <th>Recall-Macro</th>
+                    <th>F1-Macro</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-model-comp">
+                  <tr><td colspan="5">Memuat data evaluasi model...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="modern-card">
+            <div class="card-head">
+              <div>
+                <h3 class="card-title">Ablation Study (Analisis Kontribusi Komponen)</h3>
+                <p class="card-subtitle">Pengujian 8 konfigurasi: Single Model, Pairwise Combination, hingga Full Hybrid Ensemble</p>
+              </div>
+            </div>
+            <div class="table-responsive">
+              <table class="styled-table" id="table-ablation">
+                <thead>
+                  <tr>
+                    <th>Konfigurasi Eksperimen</th>
+                    <th>Accuracy</th>
+                    <th>F1-Macro</th>
+                    <th>Delta vs Model Tunggal Terbaik</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-ablation">
+                  <tr><td colspan="4">Memuat data ablation study...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB 4: LIVE PREDICTOR ──────────────── -->
+        <section class="tab-pane" id="tab-predictor">
+          <div class="predictor-card">
+            <div class="predictor-intro">
+              <h3 class="predictor-title">⚡ Live Sentiment & Aspect Predictor</h3>
+              <p class="predictor-subtitle">
+                Ketik kalimat opini atau komentar baru seputar kampus Undiksha untuk menguji inferensi secara real-time.
+              </p>
+            </div>
+
+            <div class="predictor-form">
+              <textarea id="predict-text" placeholder="Ketik opini Anda di sini... Contoh: Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!</textarea>
+              <div class="predictor-actions">
+                <button type="button" class="btn-gradient" id="btn-predict">
+                  <span>⚡ Jalankan Prediksi Sentimen</span>
+                </button>
+              </div>
+
+              <!-- Quick Test Buttons -->
+              <div class="predictor-quick-examples">
+                <span class="quick-title">Coba Contoh Opini Cepat:</span>
+                <button type="button" class="quick-pill" data-text="Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">👍 Fasilitas (Positif)</button>
+                <button type="button" class="quick-pill" data-text="Dosen pembimbing sangat ramah dan memberikan masukan konstruktif saat bimbingan skripsi.">👍 Akademik (Positif)</button>
+                <button type="button" class="quick-pill" data-text="Kapan batas akhir pengisian KRS dan validasi pembayaran UKT semester ini?">ℹ️ Informasi (Netral)</button>
+                <button type="button" class="quick-pill" data-text="Server SIAKAD error lagi pas rebutan mata kuliah, mohon segera diperbaiki!">⚠️ Sistem SIAKAD (Negatif)</button>
+              </div>
+            </div>
+
+            <div class="predict-result-box" id="predict-result" style="display: none;">
+              <div class="result-metrics-row">
+                <div class="metric-block">
+                  <span class="block-label">PREDIKSI KELAS:</span>
+                  <span id="pred-badge" class="result-badge pill-positif">POSITIF</span>
+                </div>
+                <div class="metric-block">
+                  <span class="block-label">ASPEK TERDETEKSI:</span>
+                  <span id="pred-aspect" class="aspect-text">FASILITAS</span>
+                </div>
+                <div class="metric-block">
+                  <span class="block-label">SKOR POLARITAS:</span>
+                  <span id="pred-score" class="score-text">+3.00</span>
+                </div>
+              </div>
+
+              <div class="meter-group">
+                <div class="meter-title">ESTIMASI PROBABILITAS KELAS:</div>
+                
+                <div class="meter-item">
+                  <span class="meter-name text-green">Positif:</span>
+                  <div class="meter-track">
+                    <div class="meter-fill fill-green" id="meter-pos" style="width: 80%;"></div>
+                  </div>
+                  <span class="meter-val" id="pct-pos">80.0%</span>
+                </div>
+
+                <div class="meter-item">
+                  <span class="meter-name text-slate">Netral:</span>
+                  <div class="meter-track">
+                    <div class="meter-fill fill-slate" id="meter-net" style="width: 15%;"></div>
+                  </div>
+                  <span class="meter-val" id="pct-net">15.0%</span>
+                </div>
+
+                <div class="meter-item">
+                  <span class="meter-name text-red">Negatif:</span>
+                  <div class="meter-track">
+                    <div class="meter-fill fill-red" id="meter-neg" style="width: 5%;"></div>
+                  </div>
+                  <span class="meter-val" id="pct-neg">5.0%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB 5: DATA EXPLORER ──────────────── -->
+        <section class="tab-pane" id="tab-explorer">
+          <div class="modern-card">
+            <div class="table-header-bar">
+              <div>
+                <h3 class="card-title">Eksplorasi Korpus Opini Media Sosial Asli</h3>
+                <span id="data-count-text" class="card-subtitle">Memuat data real...</span>
+              </div>
+              <div class="table-actions-right">
+                <input type="text" id="table-search" class="styled-search-input" placeholder="🔍 Cari kata kunci teks opini...">
+                <button class="btn-gradient btn-sm" id="btn-export-csv">
+                  <span>📥 Ekspor JSON</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="table-responsive">
+              <table class="styled-table" id="table-comments">
+                <thead>
+                  <tr>
+                    <th style="width: 100px;">Platform</th>
+                    <th>Teks Opini Asli Lapangan</th>
+                    <th style="width: 110px;">Sentimen</th>
+                    <th style="width: 130px;">Aspek</th>
+                    <th style="width: 120px;">Waktu Posting</th>
+                  </tr>
+                </thead>
+                <tbody id="tbody-comments">
+                  <tr><td colspan="5">Memuat data komentar...</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p><strong>Sistem Pemantauan Reputasi Kampus Undiksha</strong> &copy; 2026 UPT TIK Universitas Pendidikan Ganesha</p>
+        <p class="footer-sub">Dikembangkan dengan Python, Flask, Vanilla CSS & Chart.js | Hybrid Ensemble AI Model</p>
+      </footer>
+    </div>
+  </div>
+
+  <!-- Custom JS -->
+  <script src="/static/js/main.js"></script>
+</body>
+</html>
