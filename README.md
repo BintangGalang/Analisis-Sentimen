@@ -220,4 +220,4 @@ set_seed(config["seed"])
 
 ## Lisensi & Penggunaan Data
 
-Data hasil analisis hanya untuk keperluan akademis magang. Konsultasikan dengan pembimbing sebelum publikasi.
+Data hasil analisis hanya untuk keperluan akademis. 
