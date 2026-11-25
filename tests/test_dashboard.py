@@ -41,7 +41,9 @@ def test_dashboard_required_data_artifacts():
     root = Path(__file__).resolve().parent.parent
     
     # 1. Tabel data
-    labeled_csv = root / "data" / "labeled" / "youtube_labeled.csv"
+    labeled_csv = root / "data" / "labeled" / "combined_labeled.csv"
+    if not labeled_csv.exists():
+        labeled_csv = root / "data" / "labeled" / "youtube_labeled.csv"
     assert labeled_csv.exists(), f"File {labeled_csv} harus tersedia untuk dashboard."
     
     # 2. Tabel perbandingan model & indeks reputasi

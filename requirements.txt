@@ -39,17 +39,22 @@ python-dotenv==1.0.1
 tqdm==4.66.4
 joblib==1.4.2
 
-# --- Pengumpulan Data ---
+# --- Pengumpulan & Scraping Data ---
 google-api-python-client==2.137.0   # YouTube Data API v3
 requests==2.32.3
 tweepy==4.14.0                       # Twitter/X API v2
+playwright>=1.40.0                   # Multi-Platform Browser Automation
+playwright-stealth>=1.0.6            # Stealth Anti-Bot Bypass
+beautifulsoup4>=4.12.0
 
-# --- Statistik (Uji Signifikansi) ---
-statsmodels==0.14.2
-pingouin==0.5.4
+# --- Skema Data & Utilitas ---
+pydantic>=2.5.0
+openpyxl>=3.1.2                      # Ekspor & Audit Excel
+rich>=13.7.0                         # Format Terminal & Logging Cantik
 
-# --- Dashboard (Opsional) ---
+# --- Dashboard & Web Server ---
 streamlit==1.36.0
+flask>=3.0.0
 
 # --- Testing ---
 pytest==8.2.2

@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -84,9 +85,10 @@ def compute_reputation_by_group(
 
     for name, grp in groups:
         total = len(grp)
-        pos = int((grp[sentiment_col] == "positif").sum())
-        neg = int((grp[sentiment_col] == "negatif").sum())
-        net = int((grp[sentiment_col] == "netral").sum())
+        s_series = grp[sentiment_col].astype(str).str.lower().str.strip()
+        pos = int(((s_series == "positif") | (grp[sentiment_col] == 1)).sum())
+        neg = int(((s_series == "negatif") | (grp[sentiment_col] == -1)).sum())
+        net = int(((s_series == "netral") | (grp[sentiment_col] == 0)).sum())
 
         idx_val = calculate_reputation_index(pos, neg, total)
 
@@ -127,9 +129,10 @@ def compute_comprehensive_reputation_report(
         Dict berisi DataFrame per aspek, per waktu, dan per jenis akun.
     """
     total = len(df)
-    pos = int((df[sentiment_col] == "positif").sum())
-    neg = int((df[sentiment_col] == "negatif").sum())
-    net = int((df[sentiment_col] == "netral").sum())
+    s_series = df[sentiment_col].astype(str).str.lower().str.strip()
+    pos = int(((s_series == "positif") | (df[sentiment_col] == 1)).sum())
+    neg = int(((s_series == "negatif") | (df[sentiment_col] == -1)).sum())
+    net = int(((s_series == "netral") | (df[sentiment_col] == 0)).sum())
     overall_idx = calculate_reputation_index(pos, neg, total)
 
     df_overall = pd.DataFrame([{
@@ -185,7 +188,8 @@ def compute_comprehensive_reputation_report(
 def main() -> None:
     """CLI untuk menghitung indeks reputasi Undiksha."""
     parser = argparse.ArgumentParser(description="Hitung Indeks Reputasi Undiksha.")
-    parser.add_argument("--data", default="data/labeled/youtube_labeled.csv")
+    default_data = "data/labeled/combined_labeled.csv" if os.path.exists("data/labeled/combined_labeled.csv") else "data/processed/undiksha_dataset_labeled.csv"
+    parser.add_argument("--data", default=default_data)
     args = parser.parse_args()
 
     df = pd.read_csv(args.data)

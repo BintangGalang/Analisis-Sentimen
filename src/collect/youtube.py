@@ -95,19 +95,21 @@ def search_videos(
     query: str,
     max_results: int = DEFAULT_MAX_VIDEOS,
     language: str = "id",
+    published_after: str | None = None,
 ) -> list[dict[str, Any]]:
     """Mencari video YouTube berdasarkan query.
 
     Args:
-        youtube    : Klien YouTube API.
-        query      : Kata kunci pencarian.
-        max_results: Jumlah video maksimum yang diambil.
-        language   : Kode bahasa untuk filter relevansi (default: 'id').
+        youtube        : Klien YouTube API.
+        query          : Kata kunci pencarian.
+        max_results    : Jumlah video maksimum yang diambil.
+        language       : Kode bahasa untuk filter relevansi (default: 'id').
+        published_after: String tanggal ISO 8601 (misal 2026-11-10T00:00:00Z) untuk filter waktu.
 
     Returns:
         List dict berisi videoId, title, channelTitle, publishedAt.
     """
-    logger.info("Mencari video untuk query: '%s' (maks %d video).", query, max_results)
+    logger.info("Mencari video untuk query: '%s' (maks %d video, filter waktu: %s).", query, max_results, published_after or "semua")
     videos: list[dict[str, Any]] = []
     next_page_token: str | None = None
 
@@ -123,6 +125,8 @@ def search_videos(
             "relevanceLanguage": language,
             "pageToken": next_page_token,
         }
+        if published_after:
+            params["publishedAfter"] = published_after
 
         with limiter:
             response = youtube.search().list(**params).execute()
@@ -237,6 +241,7 @@ def collect_youtube(
     raw_dir: str | Path,
     max_videos: int = DEFAULT_MAX_VIDEOS,
     max_comments: int = DEFAULT_MAX_COMMENTS,
+    days: int | None = None,
 ) -> pd.DataFrame:
     """Menjalankan pipeline pengumpulan data YouTube secara lengkap.
 
@@ -245,15 +250,24 @@ def collect_youtube(
         raw_dir     : Direktori output data mentah.
         max_videos  : Maks video per keyword.
         max_comments: Maks komentar per video.
+        days        : Batas rentang waktu hari ke belakang (misal: 7 untuk seminggu terakhir).
 
     Returns:
         DataFrame dengan semua komentar yang dikumpulkan.
     """
+    from datetime import datetime, timezone, timedelta
+
+    published_after: str | None = None
+    if days is not None and days > 0:
+        cutoff_dt = datetime.now(timezone.utc) - timedelta(days=days)
+        published_after = cutoff_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        logger.info("Filter rentang waktu aktif: mengambil video sejak %s (%d hari terakhir).", published_after, days)
+
     youtube = _build_youtube_client()
     all_rows: list[dict[str, Any]] = []
 
     for kw in keywords:
-        videos = search_videos(youtube, kw, max_results=max_videos)
+        videos = search_videos(youtube, kw, max_results=max_videos, published_after=published_after)
 
         for video in videos:
             video_url = f"https://www.youtube.com/watch?v={video['video_id']}"
@@ -301,6 +315,7 @@ def main() -> None:
     parser.add_argument("--config",        default="configs/config.yaml", help="Path ke config.yaml")
     parser.add_argument("--max-videos",    type=int, default=None, help="Override maks video per keyword")
     parser.add_argument("--max-comments",  type=int, default=None, help="Override maks komentar per video")
+    parser.add_argument("--days",          type=int, default=None, help="Ambil video/komentar dalam N hari terakhir (misal: 7)")
     args = parser.parse_args()
 
     config = load_config(args.config)
@@ -315,6 +330,7 @@ def main() -> None:
         raw_dir=config["paths"]["raw_dir"],
         max_videos=max_videos,
         max_comments=max_comments,
+        days=args.days,
     )
 
     logger.info("Selesai. Total baris terkumpul: %d", len(df))

@@ -72,3 +72,18 @@ def test_flask_api_reports(client):
     data = response.get_json()
     assert "model_comparison" in data
     assert "ablation_study" in data
+
+
+def test_flask_api_weekly_pulse(client):
+    """Menguji endpoint /api/weekly_pulse mengembalikan data monitoring 7 hari terakhir."""
+    response = client.get("/api/weekly_pulse")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["available"] is True
+    assert "total" in data
+    assert "positif" in data
+    assert "netral" in data
+    assert "negatif" in data
+    assert "reputation_index_pct" in data
+    assert "top_aspects" in data
+    assert "platform_breakdown" in data

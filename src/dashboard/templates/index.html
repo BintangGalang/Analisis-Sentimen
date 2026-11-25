@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Monitoring Reputasi Undiksha | Hybrid Ensemble AI</title>
-  <meta name="description" content="Dashboard Analisis Sentimen & Monitoring Reputasi Kampus Universitas Pendidikan Ganesha (Undiksha) berbasis Hybrid Ensemble (InSet + ML Klasik + IndoBERT).">
-  
+  <meta name="description"
+    content="Dashboard Analisis Sentimen & Monitoring Reputasi Kampus Universitas Pendidikan Ganesha (Undiksha) berbasis Hybrid Ensemble (InSet + ML Klasik + IndoBERT).">
+
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet">
+
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
 
   <!-- App Main Wrapper -->
@@ -38,11 +42,37 @@
 
       <!-- Navigation Section -->
       <div class="sidebar-nav-container">
-        <span class="sidebar-nav-heading">MENU NAVIGASI</span>
+        <span class="sidebar-nav-heading">PEMANTAUAN MINGGUAN</span>
         <nav class="sidebar-menu" id="sidebar-nav">
-          <button class="sidebar-nav-item tab-btn active" data-tab="tab-overview" id="btn-tab-overview">
+          <button class="sidebar-nav-item tab-btn active" data-tab="tab-weekly-issues" id="btn-tab-weekly-issues">
+            <span class="nav-icon">🔥</span>
+            <span class="nav-label">Isu Minggu Ini</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-history" id="btn-tab-history">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">Riwayat Isu</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-predictor" id="btn-tab-predictor">
+            <span class="nav-icon">⚡</span>
+            <span class="nav-label">Uji Prediksi</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-about" id="btn-tab-about">
+            <span class="nav-icon">ℹ️</span>
+            <span class="nav-label">Tentang Data</span>
+            <span class="nav-indicator"></span>
+          </button>
+
+          <span class="sidebar-nav-heading" style="margin-top: 15px;">KORPUS & RISET</span>
+
+          <button class="sidebar-nav-item tab-btn" data-tab="tab-overview" id="btn-tab-overview">
             <span class="nav-icon">📊</span>
-            <span class="nav-label">Ringkasan & Metrik</span>
+            <span class="nav-label">Ringkasan Korpus</span>
             <span class="nav-indicator"></span>
           </button>
 
@@ -58,15 +88,9 @@
             <span class="nav-indicator"></span>
           </button>
 
-          <button class="sidebar-nav-item tab-btn" data-tab="tab-predictor" id="btn-tab-predictor">
-            <span class="nav-icon">⚡</span>
-            <span class="nav-label">Live Sentiment Predictor</span>
-            <span class="nav-indicator"></span>
-          </button>
-
           <button class="sidebar-nav-item tab-btn" data-tab="tab-explorer" id="btn-tab-explorer">
             <span class="nav-icon">🔍</span>
-            <span class="nav-label">Data Explorer Real</span>
+            <span class="nav-label">Data Explorer</span>
             <span class="nav-indicator"></span>
           </button>
         </nav>
@@ -128,110 +152,623 @@
       <!-- Dashboard Scrollable Body -->
       <main class="dashboard-body">
 
-        <!-- ──────────────── TAB 1: OVERVIEW & GRAFIK ──────────────── -->
-        <section class="tab-pane active" id="tab-overview">
+        <!-- ──────────────── TAB: ISU MINGGU INI (HALAMAN UTAMA) ──────────────── -->
+        <section class="tab-pane active" id="tab-weekly-issues">
+
+          <!-- Executive Weekly Summary Bar -->
+          <div class="weekly-header-card">
+            <div class="weekly-header-top">
+              <div class="weekly-title-group">
+                <div class="weekly-badge">
+                  <span class="pulse-dot"></span>
+                  <span>PEMERIKSAAN DINAMIKA MINGGUAN &bull; 7 HARI TERAKHIR</span>
+                </div>
+                <h1 class="weekly-heading">Radar Pemantauan Isu & Reputasi Undiksha</h1>
+                <div class="weekly-period-chip">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span id="wi-period-text">Memuat rentang periode...</span>
+                </div>
+              </div>
+              <div class="weekly-controls">
+                <div class="control-item">
+                  <label for="wi-select-week" class="control-label">Pilih Periode:</label>
+                  <select id="wi-select-week" class="styled-select-compact"></select>
+                </div>
+                <button type="button" id="wi-btn-run-pipeline" class="btn-primary-compact"
+                  title="Atur rentang waktu, kata kunci pencarian, dan batas post penarikan data"
+                  onclick="openFetchConfigModal()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                  </svg>
+                  <span>⚙️ Tarik Data & Analisis</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Panel Progres Penarikan Data Real-time -->
+            <div id="wi-progress-panel" class="wp-progress-panel"
+              style="display: none; margin-top: 1rem; margin-bottom: 0.5rem;">
+              <div class="wp-progress-header">
+                <div class="wp-progress-title-wrap">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="spin-icon">
+                    <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+                  </svg>
+                  <span>Progres Penarikan & Analisis Data Isu (6 Medsos):</span>
+                </div>
+                <div class="wp-progress-actions">
+                  <span id="wi-progress-time" class="wp-progress-time">0.0 dtk</span>
+                  <button type="button" class="btn-panel-dismiss" onclick="dismissProgressPanel()"
+                    title="Tutup panel progres">&times;</button>
+                </div>
+              </div>
+              <ul id="wi-progress-list" class="wp-progress-list"></ul>
+              <!-- Ringkasan Detail Hasil Penarikan 6 Medsos -->
+              <div id="wi-fetch-summary-box" class="fetch-summary-box" style="display: none;">
+                <div class="fetch-summary-title">📊 Rincian Hasil Penarikan &amp; Pemrosesan Data</div>
+                <div id="wi-fetch-platform-grid" class="fetch-platform-grid"></div>
+                <div id="wi-fetch-meta-strip" class="fetch-meta-strip"></div>
+              </div>
+              <div id="wi-progress-done-banner" class="progress-success-card" style="display: none;">
+                <div class="success-icon">✓</div>
+                <div class="success-content">
+                  <h4>Sinkronisasi Selesai!</h4>
+                  <p id="wi-success-desc">Data baru telah berhasil diintegrasikan ke dashboard dan dievaluasi oleh Model
+                    AI Ensemble.</p>
+                </div>
+                <button type="button" class="btn-dismiss-progress" onclick="dismissProgressPanel()">Lihat Dashboard
+                  &rarr;</button>
+              </div>
+            </div>
+
+            <!-- Peringatan Data Terbatas (jika ada) -->
+            <div id="wi-limited-data-alert" class="limited-data-banner" style="display: none;">
+              <div class="alert-icon-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" y1="9" x2="12" y2="13" />
+                  <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+              </div>
+              <div class="alert-text-block">
+                <strong>Data Terbatas untuk Periode Ini:</strong> Jumlah data sebutan minggu ini berada di bawah ambang
+                batas minimum (&lt; 5 opini). Indeks dan topik disajikan sebagai rujukan indikatif awal dan disarankan
+                verifikasi manual tambahan.
+              </div>
+            </div>
+
+            <!-- 4 Elevated KPI Cards -->
+            <div class="kpi-cards-grid">
+              <div class="kpi-stat-card card-kpi-mentions">
+                <div class="kpi-card-header">
+                  <span class="kpi-stat-label">Total Sebutan Opini</span>
+                  <div class="kpi-icon-avatar avatar-blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="kpi-stat-value text-blue" id="wi-kpi-mentions">-</div>
+                <div class="kpi-stat-sub">Volume opini publik media sosial 7 hari terakhir</div>
+              </div>
+
+              <div class="kpi-stat-card card-kpi-reputation">
+                <div class="kpi-card-header">
+                  <span class="kpi-stat-label">Indeks Reputasi Minggu Ini</span>
+                  <div class="kpi-icon-avatar avatar-green">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="8" r="7" />
+                      <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="kpi-stat-value text-green" id="wi-kpi-rep-index">-</div>
+                <div class="kpi-stat-sub" id="wi-kpi-delta">
+                  <span class="trend-chip" id="wi-trend-chip"><span id="wi-trend-icon">→</span> <span
+                      id="wi-delta-val">-</span></span>
+                  <span class="trend-vs">vs minggu lalu</span>
+                </div>
+              </div>
+
+              <div class="kpi-stat-card card-kpi-sentiment">
+                <div class="kpi-card-header">
+                  <span class="kpi-stat-label">Sentimen Negatif (Keluhan)</span>
+                  <div class="kpi-icon-avatar avatar-red">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="12" y1="8" x2="12" y2="12" />
+                      <line x1="12" y1="16" x2="12.01" y2="16" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="kpi-stat-value text-red" id="wi-kpi-neg-pct">-%</div>
+                <div class="kpi-stat-sub" id="wi-kpi-sent-breakdown">Positif: -% &bull; Netral: -%</div>
+              </div>
+
+              <div class="kpi-stat-card card-kpi-alert">
+                <div class="kpi-card-header">
+                  <span class="kpi-stat-label">Tingkat Perhatian Sistem</span>
+                  <div class="kpi-icon-avatar avatar-amber">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                      <line x1="12" y1="9" x2="12" y2="13" />
+                      <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                  </div>
+                </div>
+                <div class="kpi-stat-value" id="wi-kpi-alert-status">-</div>
+                <div class="kpi-stat-sub" id="wi-kpi-alert-sub">Berdasarkan skor lonjakan & proporsi negatif</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Isu Negatif & Keluhan Publik Section -->
+          <div class="top-issues-section">
+            <div class="section-title-wrap">
+              <div class="issues-title-header">
+                <div>
+                  <h2 class="section-title">🚨 Top Isu Negatif &amp; Keluhan Publik</h2>
+                  <p class="section-subtitle">Menampilkan hanya aspek yang memiliki sentimen negatif (keluhan) minggu ini, diurutkan berdasarkan tingkat urgensi tertinggi.</p>
+                </div>
+                <div class="issues-filter-pills" id="wi-issues-filter-group">
+                  <button type="button" class="issue-filter-pill pill-negative active" id="btn-issue-filter-neg"
+                    data-filter="negative"
+                    title="Tampilkan hanya aspek yang memiliki keluhan/sentimen negatif">
+                    <span class="neg-dot"></span>
+                    <span>🚨 Hanya Isu Negatif</span>
+                  </button>
+                  <button type="button" class="issue-filter-pill" id="btn-issue-filter-all"
+                    data-filter="all">Semua Isu</button>
+                </div>
+              </div>
+            </div>
+            <div id="wi-top-issues-container" class="top-issues-grid">
+              <div class="issue-loading-card">Memuat data isu negatif...</div>
+            </div>
+          </div>
+
+          <!-- Visualisasi Grafik Grid -->
+          <div class="charts-2col-grid">
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3 class="chart-title">📈 Tren Sentimen Harian (7 Hari Terakhir)</h3>
+                <span class="chart-badge">Line Chart</span>
+              </div>
+              <div class="chart-canvas-wrapper">
+                <canvas id="chartDailySentimentTrend"></canvas>
+              </div>
+            </div>
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3 class="chart-title">📱 Distribusi Sentimen per Platform</h3>
+                <span class="chart-badge">Bar Chart</span>
+              </div>
+              <div class="chart-canvas-wrapper">
+                <canvas id="chartPlatformSentimentDist"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div class="charts-2col-grid">
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3 class="chart-title">🗺️ Heatmap Sebaran Aspek × Platform</h3>
+                <span class="chart-badge">Matriks Frekuensi</span>
+              </div>
+              <div id="wi-heatmap-container" class="heatmap-table-wrapper">
+                <!-- Render tabel matriks heatmap -->
+              </div>
+            </div>
+            <div class="chart-box">
+              <div class="chart-header">
+                <h3 class="chart-title">☁️ Kata & Frasa Kunci Terbanyak Minggu Ini</h3>
+                <span class="chart-badge">Analisis Unigram/Bigram</span>
+              </div>
+              <div id="wi-top-words-container" class="words-cloud-wrapper">
+                <!-- Render word pills / bar -->
+              </div>
+            </div>
+          </div>
+
+          <div class="chart-box full-width-chart">
+            <div class="chart-header">
+              <h3 class="chart-title">📊 Tren Indeks Reputasi Multi-Minggu (Historis 8–12 Minggu Terakhir)</h3>
+              <span class="chart-badge">Evaluasi Berkala</span>
+            </div>
+            <div class="chart-canvas-wrapper-wide">
+              <canvas id="chartMultiWeekReputationTrend"></canvas>
+            </div>
+          </div>
+
+          <!-- Filter & Tabel Postingan Mingguan -->
+          <!-- Filter & Tabel Postingan Mingguan (Desain Seragam Data Explorer) -->
+          <div class="modern-card weekly-posts-section" style="margin-top: 1.5rem;">
+            <!-- Explorer Filter Panel (EFP) untuk Data Mingguan -->
+            <div class="explorer-filter-panel">
+              <div class="efp-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
+                <span>Filter Khusus Data Postingan & Opini Publik Mingguan</span>
+                <button type="button" class="efp-reset-btn" id="btn-reset-wi-filters">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  <span>Reset Filter</span>
+                </button>
+              </div>
+              <div class="efp-controls">
+                <div class="efp-field">
+                  <label class="efp-label" for="wi-filter-platform">Platform:</label>
+                  <select id="wi-filter-platform" class="efp-select">
+                    <option value="all">Semua Platform</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="twitter">Twitter / X</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="threads">Threads</option>
+                    <option value="facebook">Facebook</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="wi-filter-aspect">Aspek Reputasi:</label>
+                  <select id="wi-filter-aspect" class="efp-select">
+                    <option value="all">Semua Aspek</option>
+                    <option value="akademik">Akademik</option>
+                    <option value="penerimaan_biaya">Penerimaan & Biaya</option>
+                    <option value="fasilitas">Fasilitas</option>
+                    <option value="layanan_administrasi">Layanan Administrasi</option>
+                    <option value="kemahasiswaan">Kemahasiswaan</option>
+                    <option value="lulusan_karier">Lulusan & Karier</option>
+                    <option value="isu_citra">Isu Citra</option>
+                    <option value="lainnya">Lainnya</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="wi-filter-sentiment">Sentimen:</label>
+                  <select id="wi-filter-sentiment" class="efp-select">
+                    <option value="all">Semua Sentimen</option>
+                    <option value="positif">Positif</option>
+                    <option value="netral">Netral</option>
+                    <option value="negatif">Negatif</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="wi-filter-official">Tipe Akun:</label>
+                  <select id="wi-filter-official" class="efp-select">
+                    <option value="all">Semua Akun</option>
+                    <option value="public">Hanya Akun Publik</option>
+                    <option value="official">Hanya Akun Resmi</option>
+                  </select>
+                </div>
+                <div class="efp-field efp-field-active">
+                  <span class="efp-active-label">Filter Aktif:</span>
+                  <div id="wi-active-badges" class="efp-active-badges">
+                    <span class="efp-badge-none">Tidak ada filter aktif</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-header-bar">
+              <div>
+                <h3 class="card-title">📋 Data Postingan & Opini Publik Mingguan</h3>
+                <span id="wi-data-count-text" class="card-subtitle">Memuat data mingguan...</span>
+              </div>
+              <div class="table-actions-right">
+                <div class="table-scroll-buttons">
+                  <span class="scroll-btn-label">Geser:</span>
+                  <button type="button" class="btn-scroll-nav" id="btn-wi-scroll-table-left" title="Geser tabel ke kiri">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                    <span>Kiri</span>
+                  </button>
+                  <button type="button" class="btn-scroll-nav" id="btn-wi-scroll-table-right" title="Geser tabel ke kanan">
+                    <span>Kanan</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                  </button>
+                </div>
+                <input type="text" id="wi-search-post" class="styled-search-input" placeholder="🔍 Cari kata kunci teks opini...">
+                <a href="/api/download_weekly_issues" class="btn-outline-compact" title="Unduh ringkasan isu CSV">📥 CSV Isu</a>
+                <a href="/api/download_weekly_predictions" class="btn-gradient btn-sm" style="text-decoration: none;" title="Unduh seluruh data prediksi mingguan CSV">
+                  <span>📥 CSV Data</span>
+                </a>
+              </div>
+            </div>
+
+            <div class="table-responsive" id="wi-table-responsive">
+              <table class="styled-table" id="wi-posts-table">
+                <thead>
+                  <tr>
+                    <th style="width: 110px;">Platform</th>
+                    <th>Teks Opini Asli Lapangan</th>
+                    <th style="width: 110px;">Sentimen</th>
+                    <th style="width: 130px;">Aspek</th>
+                    <th style="width: 120px;">Waktu Posting</th>
+                    <th style="width: 120px; text-align: center;">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="wi-posts-tbody">
+                  <tr>
+                    <td colspan="6" style="text-align: center; color: #94a3b8; padding: 2rem;">Memuat postingan mingguan...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Bar Navigasi Paginasi Data Postingan Mingguan -->
+            <div class="table-pagination-bar">
+              <div class="pagination-info">
+                <span id="wi-pagination-range-text">Menampilkan 0 dari 0 data</span>
+                <div class="per-page-selector">
+                  <label for="wi-select-page-size">Baris per hal:</label>
+                  <select id="wi-select-page-size" class="styled-mini-select">
+                    <option value="15" selected>15</option>
+                    <option value="25">25</option>
+                    <option value="50">50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              <div class="pagination-controls">
+                <button type="button" class="pagination-btn" id="wi-btn-prev-page" title="Halaman Sebelumnya">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+                  <span>Prev</span>
+                </button>
+                <div class="pagination-page-numbers" id="wi-pagination-pages-container"></div>
+                <button type="button" class="pagination-btn" id="wi-btn-next-page" title="Halaman Berikutnya">
+                  <span>Next</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB: RIWAYAT ISU ──────────────── -->
+        <section class="tab-pane" id="tab-history">
+          <div class="weekly-header-card">
+            <h1 class="weekly-heading">🏛️ Riwayat & Arsip Isu Mingguan</h1>
+            <p class="weekly-period">Arsip pemantauan isu kampus dari minggu-minggu sebelumnya untuk melacak tren
+              masalah berulang dan evaluasi efektivitas respons tindak lanjut universitas.</p>
+          </div>
+
+          <div class="recurring-issues-box">
+            <div class="section-title-wrap">
+              <h3 class="box-title">🔄 Analisis Isu Berulang (Recurring Issues)</h3>
+              <p class="box-subtitle">Aspek dan topik yang terdeteksi muncul secara persisten lintas minggu evaluasi.
+              </p>
+            </div>
+            <div id="wi-recurring-container" class="recurring-grid">
+              <div class="issue-loading-card">Memuat riwayat isu...</div>
+            </div>
+          </div>
+
+          <div class="history-table-section">
+            <div class="section-title-wrap between">
+              <div>
+                <h3 class="box-title">📜 Seluruh Rekam Isu Historis</h3>
+                <p class="box-subtitle">Data lengkap hasil deteksi isu per minggu yang tersimpan di sistem.</p>
+              </div>
+              <a href="/api/download_weekly_issues" class="btn-outline-compact">📥 Unduh CSV Arsip Isu</a>
+            </div>
+            <div class="table-responsive">
+              <table class="data-table" id="wi-history-table">
+                <thead>
+                  <tr>
+                    <th>Minggu</th>
+                    <th>Judul Isu</th>
+                    <th>Aspek</th>
+                    <th>Sebutan</th>
+                    <th>% Negatif</th>
+                    <th>Lonjakan</th>
+                    <th>Skor Isu</th>
+                    <th>Perhatian</th>
+                    <th>Contoh Komentar Utama</th>
+                  </tr>
+                </thead>
+                <tbody id="wi-history-tbody">
+                  <tr>
+                    <td colspan="9" class="text-center">Memuat arsip isu...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB: TENTANG DATA & METODOLOGI ──────────────── -->
+        <section class="tab-pane" id="tab-about">
+          <div class="weekly-header-card">
+            <h1 class="weekly-heading">ℹ️ Metodologi & Transparansi Data</h1>
+            <p class="weekly-period">Panduan lengkap mengenai tata cara pengambilan data, anonimisasi privasi, formula
+              matematis, batasan sistem, dan etika Human-in-the-Loop.</p>
+          </div>
+
+          <div class="about-cards-grid">
+            <div class="about-card">
+              <div class="about-card-icon">📡</div>
+              <h3 class="about-card-title">1. Cara Pengambilan Data & Kepatuhan ToS</h3>
+              <p class="about-card-text">
+                Data ditarik secara berkala untuk kurun waktu 7 hari terakhir (<code>window_days: 7</code>) menggunakan
+                YouTube Data API resmi serta scraper multi-platform (Instagram, TikTok, Threads, Facebook) dengan
+                pembatasan frekuensi (<em>rate-limiting</em>) yang wajar.
+              </p>
+              <p class="about-card-text">
+                Untuk platform dengan akses ketat, tersedia jalur alternatif berupa loader berkas
+                (<code>data/weekly_input/</code>) yang mendukung format CSV dan JSON tanpa melanggar ketentuan layanan
+                (Terms of Service) penyedia platform.
+              </p>
+            </div>
+
+            <div class="about-card">
+              <div class="about-card-icon">🔒</div>
+              <h3 class="about-card-title">2. Privasi & Anonimisasi Identitas</h3>
+              <p class="about-card-text">
+                Untuk mematuhi etika riset dan regulasi pelindungan data pribadi (UU PDP), identitas pengguna media
+                sosial tidak pernah disimpan dalam format teks polos (plain text).
+              </p>
+              <ul class="about-list">
+                <li>Username publik dianonimkan menggunakan algoritma satu arah <code>SHA-256</code> menjadi format
+                  <code>user_xxxx</code>.
+                </li>
+                <li>Penyebutan nama akun (mention <code>@username</code>) dalam teks komentar diganti secara otomatis
+                  menjadi <code>@pengguna</code>.</li>
+                <li>Akun resmi institusi (seperti <code>@undiksha</code>) tetap ditandai melalui flag
+                  <code>is_official</code> agar data pengumuman dapat dipisahkan dari opini murni publik.
+                </li>
+              </ul>
+            </div>
+
+            <div class="about-card">
+              <div class="about-card-icon">📐</div>
+              <h3 class="about-card-title">3. Formula Matematis & Penilaian Isu</h3>
+              <p class="about-card-text">
+                <strong>Indeks Reputasi Kampus:</strong>
+                <br>
+                <code>I = (P - N) / (P + N + 0.5 * O)</code>
+                <br>
+                Menghasilkan skor antara <code>-1.0</code> (sangat negatif) hingga <code>+1.0</code> (sangat positif).
+              </p>
+              <p class="about-card-text">
+                <strong>Rasio Lonjakan Isu (Growth Ratio):</strong>
+                <br>
+                <code>Growth = (V_minggu_ini + 1) / (Mean(V_4_minggu_sebelumnya) + 1)</code>
+                <br>
+                Menggunakan <em>Laplace Smoothing</em> agar tidak terjadi pembagian dengan nol pada topik baru.
+              </p>
+              <p class="about-card-text">
+                <strong>Skor Isu Terbobot (Issue Score 0 - 100):</strong>
+                <br>
+                <code>Skor = (0.30 * V_norm + 0.45 * P_negatif + 0.25 * Growth_norm) * 100</code>
+                <br>
+                Tingkat Perhatian: <strong>Tinggi</strong> (&ge;65), <strong>Sedang</strong> (&ge;40),
+                <strong>Rendah</strong> (&lt;40).
+              </p>
+            </div>
+
+            <div class="about-card">
+              <div class="about-card-icon">⚖️</div>
+              <h3 class="about-card-title">4. Batasan Sistem & Human-in-the-Loop</h3>
+              <p class="about-card-text">
+                Sistem analisis ini dirancang sebagai alat bantu pemantauan dini (<em>indicative decision support</em>)
+                bagi pimpinan universitas dan UPT TIK / Humas, bukan pengambil keputusan mutlak secara otomatis.
+              </p>
+              <div class="notice-callout">
+                <strong>PENTING:</strong> Hasil klasifikasi sentimen AI dan deteksi isu bersifat indikatif. Jika jumlah
+                data mingguan di bawah ambang minimum (<code>min_mentions: 5</code>), sistem menampilkan tanda <em>Data
+                  Terbatas</em> untuk mencegah kesimpulan yang menyesatkan. Verifikasi konteks nyata oleh tim humas
+                manusia tetap menjadi rujukan utama.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ──────────────── TAB: RINGKASAN KORPUS (SEBELUMNYA TAB 1) ──────────────── -->
+        <section class="tab-pane" id="tab-overview">
 
           <!-- Filter Card Panel -->
           <section class="filter-panel" id="filter-section">
-          <div class="filter-panel-header">
-            <span class="filter-icon">⚙️</span>
-            <span class="filter-heading">Filter Analisis Terpadu:</span>
-          </div>
-          <div class="filter-controls-grid">
-            <div class="filter-box">
-              <label for="filter-platform">Platform Media Sosial</label>
-              <select id="filter-platform" class="styled-select">
-                <option value="all">Semua Platform (Instagram, YouTube, Twitter)</option>
-                {% for p in platforms %}
-                <option value="{{ p }}">{{ p|upper }}</option>
-                {% endfor %}
-              </select>
+            <div class="filter-panel-header">
+              <span class="filter-icon">⚙️</span>
+              <span class="filter-heading">Filter Analisis Terpadu:</span>
+            </div>
+            <div class="filter-controls-grid">
+              <div class="filter-box">
+                <label for="filter-platform">Platform Media Sosial</label>
+                <select id="filter-platform" class="styled-select">
+                  <option value="all">Semua Platform (Instagram, YouTube, Twitter)</option>
+                  {% for p in platforms %}
+                  <option value="{{ p }}">{{ p|upper }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="filter-box">
+                <label for="filter-aspect">Aspek Reputasi Kampus</label>
+                <select id="filter-aspect" class="styled-select">
+                  <option value="all">Semua Aspek (7 Aspek)</option>
+                  {% for a in aspects %}
+                  <option value="{{ a }}">{{ a|replace('_', ' ')|title }}</option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="filter-box">
+                <label for="filter-sentiment">Klasifikasi Sentimen</label>
+                <select id="filter-sentiment" class="styled-select">
+                  <option value="all">Semua Sentimen (Positif, Netral, Negatif)</option>
+                  <option value="positif">Positif (Apresiasi)</option>
+                  <option value="netral">Netral (Informasi)</option>
+                  <option value="negatif">Negatif (Keluhan)</option>
+                </select>
+              </div>
+            </div>
+          </section>
+
+          <!-- KPI Metric Cards Grid -->
+          <section class="kpi-grid" id="kpi-section">
+            <!-- Total Opini -->
+            <div class="kpi-card card-primary" id="card-total">
+              <div class="kpi-card-header">
+                <span class="kpi-title">Total Opini Teranalisis</span>
+                <span class="kpi-icon-wrap bg-blue">📊</span>
+              </div>
+              <div class="kpi-main-val" id="kpi-total">{{ total_data }}</div>
+              <div class="kpi-card-footer">
+                <span>Instagram, YouTube & Twitter/X</span>
+              </div>
             </div>
 
-            <div class="filter-box">
-              <label for="filter-aspect">Aspek Reputasi Kampus</label>
-              <select id="filter-aspect" class="styled-select">
-                <option value="all">Semua Aspek (7 Aspek)</option>
-                {% for a in aspects %}
-                <option value="{{ a }}">{{ a|replace('_', ' ')|title }}</option>
-                {% endfor %}
-              </select>
+            <!-- Indeks Reputasi -->
+            <div class="kpi-card card-reputation" id="card-rep">
+              <div class="kpi-card-header">
+                <span class="kpi-title">Indeks Reputasi Undiksha</span>
+                <span class="kpi-icon-wrap bg-emerald">🎓</span>
+              </div>
+              <div class="kpi-main-val text-rep" id="kpi-rep-idx">+38.81%</div>
+              <div class="kpi-card-footer">
+                <span class="kpi-status-badge badge-pos" id="kpi-predikat">Positif (Apresiasi Baik)</span>
+              </div>
             </div>
 
-            <div class="filter-box">
-              <label for="filter-sentiment">Klasifikasi Sentimen</label>
-              <select id="filter-sentiment" class="styled-select">
-                <option value="all">Semua Sentimen (Positif, Netral, Negatif)</option>
-                <option value="positif">Positif (Apresiasi)</option>
-                <option value="netral">Netral (Informasi)</option>
-                <option value="negatif">Negatif (Keluhan)</option>
-              </select>
+            <!-- Sentimen Positif -->
+            <div class="kpi-card card-positive" id="card-pos">
+              <div class="kpi-card-header">
+                <span class="kpi-title">Opini Positif (Apresiasi)</span>
+                <span class="kpi-icon-wrap bg-green">👍</span>
+              </div>
+              <div class="kpi-main-val text-green" id="kpi-pos">-</div>
+              <div class="kpi-card-footer">
+                <span>Prestasi, Dosen & Suasana Kampus</span>
+              </div>
             </div>
-          </div>
-        </section>
 
-        <!-- KPI Metric Cards Grid -->
-        <section class="kpi-grid" id="kpi-section">
-          <!-- Total Opini -->
-          <div class="kpi-card card-primary" id="card-total">
-            <div class="kpi-card-header">
-              <span class="kpi-title">Total Opini Teranalisis</span>
-              <span class="kpi-icon-wrap bg-blue">📊</span>
+            <!-- Sentimen Netral -->
+            <div class="kpi-card card-neutral" id="card-net">
+              <div class="kpi-card-header">
+                <span class="kpi-title">Opini Netral (Informasi)</span>
+                <span class="kpi-icon-wrap bg-slate">ℹ️</span>
+              </div>
+              <div class="kpi-main-val text-slate" id="kpi-net">-</div>
+              <div class="kpi-card-footer">
+                <span>Jadwal, Pengumuman & Pertanyaan</span>
+              </div>
             </div>
-            <div class="kpi-main-val" id="kpi-total">{{ total_data }}</div>
-            <div class="kpi-card-footer">
-              <span>Instagram, YouTube & Twitter/X</span>
-            </div>
-          </div>
 
-          <!-- Indeks Reputasi -->
-          <div class="kpi-card card-reputation" id="card-rep">
-            <div class="kpi-card-header">
-              <span class="kpi-title">Indeks Reputasi Undiksha</span>
-              <span class="kpi-icon-wrap bg-emerald">🎓</span>
+            <!-- Sentimen Negatif -->
+            <div class="kpi-card card-negative" id="card-neg">
+              <div class="kpi-card-header">
+                <span class="kpi-title">Opini Negatif (Keluhan)</span>
+                <span class="kpi-icon-wrap bg-red">⚠️</span>
+              </div>
+              <div class="kpi-main-val text-red" id="kpi-neg">-</div>
+              <div class="kpi-card-footer">
+                <span>SIAKAD, Fasilitas Wifi & UKT</span>
+              </div>
             </div>
-            <div class="kpi-main-val text-rep" id="kpi-rep-idx">+38.81%</div>
-            <div class="kpi-card-footer">
-              <span class="kpi-status-badge badge-pos" id="kpi-predikat">Positif (Apresiasi Baik)</span>
-            </div>
-          </div>
-
-          <!-- Sentimen Positif -->
-          <div class="kpi-card card-positive" id="card-pos">
-            <div class="kpi-card-header">
-              <span class="kpi-title">Opini Positif (Apresiasi)</span>
-              <span class="kpi-icon-wrap bg-green">👍</span>
-            </div>
-            <div class="kpi-main-val text-green" id="kpi-pos">-</div>
-            <div class="kpi-card-footer">
-              <span>Prestasi, Dosen & Suasana Kampus</span>
-            </div>
-          </div>
-
-          <!-- Sentimen Netral -->
-          <div class="kpi-card card-neutral" id="card-net">
-            <div class="kpi-card-header">
-              <span class="kpi-title">Opini Netral (Informasi)</span>
-              <span class="kpi-icon-wrap bg-slate">ℹ️</span>
-            </div>
-            <div class="kpi-main-val text-slate" id="kpi-net">-</div>
-            <div class="kpi-card-footer">
-              <span>Jadwal, Pengumuman & Pertanyaan</span>
-            </div>
-          </div>
-
-          <!-- Sentimen Negatif -->
-          <div class="kpi-card card-negative" id="card-neg">
-            <div class="kpi-card-header">
-              <span class="kpi-title">Opini Negatif (Keluhan)</span>
-              <span class="kpi-icon-wrap bg-red">⚠️</span>
-            </div>
-            <div class="kpi-main-val text-red" id="kpi-neg">-</div>
-            <div class="kpi-card-footer">
-              <span>SIAKAD, Fasilitas Wifi & UKT</span>
-            </div>
-          </div>
-        </section>
+          </section>
 
           <div class="charts-duo-grid">
             <!-- Donut Chart Proporsi Sentimen -->
@@ -270,7 +807,8 @@
               </div>
             </div>
             <div class="image-center-box">
-              <img src="/figures/model_comparison_chart.png" alt="Grafik Perbandingan Model" class="responsive-preview-img" id="img-model-comp">
+              <img src="/figures/model_comparison_chart.png" alt="Grafik Perbandingan Model"
+                class="responsive-preview-img" id="img-model-comp">
             </div>
           </div>
         </section>
@@ -281,11 +819,13 @@
             <div class="card-head">
               <div>
                 <h3 class="card-title">Komposisi Sentimen Lintas 7 Aspek Reputasi Undiksha</h3>
-                <p class="card-subtitle">100% Stacked bar chart: Citra Umum, Kemahasiswaan, Fasilitas, Layanan, Biaya, Akademik, Karier</p>
+                <p class="card-subtitle">100% Stacked bar chart: Citra Umum, Kemahasiswaan, Fasilitas, Layanan, Biaya,
+                  Akademik, Karier</p>
               </div>
             </div>
             <div class="image-center-box">
-              <img src="/figures/aspect_sentiment_breakdown.png" alt="Breakdown Aspek" class="responsive-preview-img" id="img-aspect-breakdown">
+              <img src="/figures/aspect_sentiment_breakdown.png" alt="Breakdown Aspek" class="responsive-preview-img"
+                id="img-aspect-breakdown">
             </div>
           </div>
 
@@ -336,7 +876,9 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-model-comp">
-                  <tr><td colspan="5">Memuat data evaluasi model...</td></tr>
+                  <tr>
+                    <td colspan="5">Memuat data evaluasi model...</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -346,7 +888,8 @@
             <div class="card-head">
               <div>
                 <h3 class="card-title">Ablation Study (Analisis Kontribusi Komponen)</h3>
-                <p class="card-subtitle">Pengujian 8 konfigurasi: Single Model, Pairwise Combination, hingga Full Hybrid Ensemble</p>
+                <p class="card-subtitle">Pengujian 8 konfigurasi: Single Model, Pairwise Combination, hingga Full Hybrid
+                  Ensemble</p>
               </div>
             </div>
             <div class="table-responsive">
@@ -360,7 +903,9 @@
                   </tr>
                 </thead>
                 <tbody id="tbody-ablation">
-                  <tr><td colspan="4">Memuat data ablation study...</td></tr>
+                  <tr>
+                    <td colspan="4">Memuat data ablation study...</td>
+                  </tr>
                 </tbody>
               </table>
             </div>
@@ -378,7 +923,8 @@
             </div>
 
             <div class="predictor-form">
-              <textarea id="predict-text" placeholder="Ketik opini Anda di sini... Contoh: Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!</textarea>
+              <textarea id="predict-text"
+                placeholder="Ketik opini Anda di sini... Contoh: Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!</textarea>
               <div class="predictor-actions">
                 <button type="button" class="btn-gradient" id="btn-predict">
                   <span>⚡ Jalankan Prediksi Sentimen</span>
@@ -388,10 +934,18 @@
               <!-- Quick Test Buttons -->
               <div class="predictor-quick-examples">
                 <span class="quick-title">Coba Contoh Opini Cepat:</span>
-                <button type="button" class="quick-pill" data-text="Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">👍 Fasilitas (Positif)</button>
-                <button type="button" class="quick-pill" data-text="Dosen pembimbing sangat ramah dan memberikan masukan konstruktif saat bimbingan skripsi.">👍 Akademik (Positif)</button>
-                <button type="button" class="quick-pill" data-text="Kapan batas akhir pengisian KRS dan validasi pembayaran UKT semester ini?">ℹ️ Informasi (Netral)</button>
-                <button type="button" class="quick-pill" data-text="Server SIAKAD error lagi pas rebutan mata kuliah, mohon segera diperbaiki!">⚠️ Sistem SIAKAD (Negatif)</button>
+                <button type="button" class="quick-pill"
+                  data-text="Perpustakaan pusat Undiksha sekarang adem banget dan koleksi bukunya makin lengkap untuk nugas skripsi!">👍
+                  Fasilitas (Positif)</button>
+                <button type="button" class="quick-pill"
+                  data-text="Dosen pembimbing sangat ramah dan memberikan masukan konstruktif saat bimbingan skripsi.">👍
+                  Akademik (Positif)</button>
+                <button type="button" class="quick-pill"
+                  data-text="Kapan batas akhir pengisian KRS dan validasi pembayaran UKT semester ini?">ℹ️ Informasi
+                  (Netral)</button>
+                <button type="button" class="quick-pill"
+                  data-text="Server SIAKAD error lagi pas rebutan mata kuliah, mohon segera diperbaiki!">⚠️ Sistem
+                  SIAKAD (Negatif)</button>
               </div>
             </div>
 
@@ -413,7 +967,7 @@
 
               <div class="meter-group">
                 <div class="meter-title">ESTIMASI PROBABILITAS KELAS:</div>
-                
+
                 <div class="meter-item">
                   <span class="meter-name text-green">Positif:</span>
                   <div class="meter-track">
@@ -445,20 +999,105 @@
         <!-- ──────────────── TAB 5: DATA EXPLORER ──────────────── -->
         <section class="tab-pane" id="tab-explorer">
           <div class="modern-card">
+            <!-- Explorer Filter Panel (EFP) -->
+            <div class="explorer-filter-panel">
+              <div class="efp-header">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                  <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+                </svg>
+                <span>Filter Khusus Korpus Opini Real</span>
+                <button type="button" class="efp-reset-btn" id="btn-reset-explorer-filters">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+                    <path d="M3 3v5h5" />
+                  </svg>
+                  <span>Reset Filter</span>
+                </button>
+              </div>
+              <div class="efp-controls">
+                <div class="efp-field">
+                  <label class="efp-label" for="efp-platform">Platform:</label>
+                  <select id="efp-platform" class="efp-select">
+                    <option value="all">Semua Platform</option>
+                    <option value="instagram">Instagram</option>
+                    <option value="youtube">YouTube</option>
+                    <option value="twitter">Twitter / X</option>
+                    <option value="tiktok">TikTok</option>
+                    <option value="facebook">Facebook</option>
+                    <option value="threads">Threads</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="efp-aspect">Aspek Reputasi:</label>
+                  <select id="efp-aspect" class="efp-select">
+                    <option value="all">Semua Aspek</option>
+                    <option value="layanan_administrasi">Layanan Administrasi</option>
+                    <option value="fasilitas">Fasilitas Kampus</option>
+                    <option value="kemahasiswaan">Kemahasiswaan</option>
+                    <option value="akademik">Akademik</option>
+                    <option value="penerimaan_biaya">Penerimaan & Biaya</option>
+                    <option value="lulusan_karier">Lulusan & Karier</option>
+                    <option value="isu_citra">Isu Citra Kampus</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="efp-sentiment">Sentimen:</label>
+                  <select id="efp-sentiment" class="efp-select">
+                    <option value="all">Semua Sentimen</option>
+                    <option value="positif">Positif</option>
+                    <option value="netral">Netral</option>
+                    <option value="negatif">Negatif</option>
+                  </select>
+                </div>
+                <div class="efp-field">
+                  <label class="efp-label" for="efp-time">Rentang Waktu:</label>
+                  <select id="efp-time" class="efp-select">
+                    <option value="all">Semua Waktu</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                  </select>
+                </div>
+                <div class="efp-field efp-field-active">
+                  <span class="efp-active-label">Filter Aktif:</span>
+                  <div id="efp-active-badges" class="efp-active-badges">
+                    <span class="efp-badge-none">Tidak ada filter aktif</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div class="table-header-bar">
               <div>
                 <h3 class="card-title">Eksplorasi Korpus Opini Media Sosial Asli</h3>
                 <span id="data-count-text" class="card-subtitle">Memuat data real...</span>
               </div>
               <div class="table-actions-right">
-                <input type="text" id="table-search" class="styled-search-input" placeholder="🔍 Cari kata kunci teks opini...">
+                <div class="table-scroll-buttons">
+                  <span class="scroll-btn-label">Geser:</span>
+                  <button type="button" class="btn-scroll-nav" id="btn-scroll-table-left" title="Geser tabel ke kiri">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <polyline points="15 18 9 12 15 6" />
+                    </svg>
+                    <span>Kiri</span>
+                  </button>
+                  <button type="button" class="btn-scroll-nav" id="btn-scroll-table-right" title="Geser tabel ke kanan">
+                    <span>Kanan</span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <polyline points="9 18 15 12 9 6" />
+                    </svg>
+                  </button>
+                </div>
+                <input type="text" id="table-search" class="styled-search-input"
+                  placeholder="🔍 Cari kata kunci teks opini...">
                 <button class="btn-gradient btn-sm" id="btn-export-csv">
                   <span>📥 Ekspor JSON</span>
                 </button>
               </div>
             </div>
 
-            <div class="table-responsive">
+            <div class="table-responsive" id="explorer-table-responsive">
               <table class="styled-table" id="table-comments">
                 <thead>
                   <tr>
@@ -467,12 +1106,46 @@
                     <th style="width: 110px;">Sentimen</th>
                     <th style="width: 130px;">Aspek</th>
                     <th style="width: 120px;">Waktu Posting</th>
+                    <th style="width: 120px; text-align: center;">Aksi</th>
                   </tr>
                 </thead>
                 <tbody id="tbody-comments">
-                  <tr><td colspan="5">Memuat data komentar...</td></tr>
+                  <tr>
+                    <td colspan="6">Memuat data komentar...</td>
+                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            <!-- Bar Navigasi Paginasi Data Explorer -->
+            <div class="table-pagination-bar">
+              <div class="pagination-info">
+                <span id="pagination-range-text">Menampilkan 0 dari 0 data</span>
+                <div class="per-page-selector">
+                  <label for="select-page-size">Baris per hal:</label>
+                  <select id="select-page-size" class="styled-mini-select">
+                    <option value="15">15</option>
+                    <option value="25">25</option>
+                    <option value="50" selected>50</option>
+                    <option value="100">100</option>
+                  </select>
+                </div>
+              </div>
+              <div class="pagination-controls">
+                <button type="button" class="pagination-btn" id="btn-page-prev" title="Halaman Sebelumnya">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="15 18 9 12 15 6" />
+                  </svg>
+                  <span>Prev</span>
+                </button>
+                <div class="pagination-page-numbers" id="pagination-pages-container"></div>
+                <button type="button" class="pagination-btn" id="btn-page-next" title="Halaman Berikutnya">
+                  <span>Next</span>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </button>
+              </div>
             </div>
           </div>
         </section>
@@ -481,13 +1154,340 @@
 
       <!-- Footer -->
       <footer class="app-footer">
-        <p><strong>Sistem Pemantauan Reputasi Kampus Undiksha</strong> &copy; 2026 UPT TIK Universitas Pendidikan Ganesha</p>
+        <p><strong>Sistem Pemantauan Reputasi Kampus Undiksha</strong> &copy; 2026 UPT TIK Universitas Pendidikan
+          Ganesha</p>
         <p class="footer-sub">Dikembangkan dengan Python, Flask, Vanilla CSS & Chart.js | Hybrid Ensemble AI Model</p>
       </footer>
+    </div>
+  </div>
+
+  <!-- ──────────────── MODAL KONFIGURASI PENARIKAN DATA ──────────────── -->
+  <div class="modal-backdrop edit-modal-backdrop" id="modal-fetch-config" style="display: none !important;">
+    <div class="fetch-config-card">
+      <div class="fetch-modal-header">
+        <div class="fetch-modal-title">
+          <div class="modal-icon-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+            </svg>
+          </div>
+          <div>
+            <h3>Konfigurasi Penarikan & Analisis Data</h3>
+            <p>Atur rentang waktu, kata kunci pencarian, batas kuota, dan fokus isu negatif Undiksha.</p>
+          </div>
+        </div>
+        <button type="button" class="edit-modal-close" id="btn-close-fetch-modal" aria-label="Tutup"
+          onclick="closeFetchConfigModal()">&times;</button>
+      </div>
+
+      <div class="fetch-modal-body">
+        <!-- Quick Presets -->
+        <div class="fetch-form-section">
+          <label class="config-section-label">PILIHAN CEPAT (PRESET PROFILE):</label>
+          <div class="fetch-presets-grid">
+            <div class="preset-card" data-preset="fast" data-days="3" data-videos="10" data-comments="30"
+              data-posts="10" data-keywords="undiksha">
+              <div class="preset-header">
+                <span class="preset-icon">⚡</span>
+                <span class="preset-name">Mode Kilat</span>
+              </div>
+              <div class="preset-specs">3 Hari &bull; 10 Post/Medsos &bull; 30 Komen</div>
+              <div class="preset-tag">Cepat ~20 dtk</div>
+            </div>
+
+            <div class="preset-card active" data-preset="standard" data-days="7" data-videos="15" data-comments="50"
+              data-posts="20" data-keywords="undiksha, universitas pendidikan ganesha">
+              <div class="preset-header">
+                <span class="preset-icon">⭐</span>
+                <span class="preset-name">Mode Standar</span>
+              </div>
+              <div class="preset-specs">7 Hari &bull; 20 Post/Medsos &bull; 50 Komen</div>
+              <div class="preset-tag preset-tag-rec">Rekomendasi Mingguan</div>
+            </div>
+
+            <div class="preset-card" data-preset="negative" data-days="7" data-videos="20" data-comments="60"
+              data-posts="25" data-keywords="undiksha ukt, undiksha siakad, undiksha fasilitas, undiksha keluhan">
+              <div class="preset-header">
+                <span class="preset-icon">🚨</span>
+                <span class="preset-name">Fokus Isu Negatif</span>
+              </div>
+              <div class="preset-specs">7 Hari &bull; 25 Post/Medsos &bull; Target Isu Kritis</div>
+              <div class="preset-tag preset-tag-warn">Prioritas Isu Kampus</div>
+            </div>
+
+            <div class="preset-card" data-preset="deep" data-days="14" data-videos="30" data-comments="100"
+              data-posts="40" data-keywords="undiksha, ukt undiksha, fasilitas undiksha, rektor undiksha">
+              <div class="preset-header">
+                <span class="preset-icon">🔍</span>
+                <span class="preset-name">Mode Lengkap</span>
+              </div>
+              <div class="preset-specs">14 Hari &bull; 40 Post/Medsos &bull; 100 Komen</div>
+              <div class="preset-tag">Audit Reputasi Luas</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Custom Controls -->
+        <div class="fetch-form-section">
+          <label class="config-section-label">PENGATURAN SPESIFIK:</label>
+
+          <!-- Kata Kunci Pencarian -->
+          <div class="cfg-form-group">
+            <div class="cfg-label-row">
+              <label for="cfg-fetch-keywords" class="cfg-label">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>Kata Kunci Pencarian (Keywords):</span>
+              </label>
+              <span class="cfg-hint">Pisahkan dengan koma</span>
+            </div>
+            <input type="text" id="cfg-fetch-keywords" class="styled-input-text"
+              value="undiksha, universitas pendidikan ganesha"
+              placeholder="Contoh: undiksha, ukt undiksha, siakad undiksha">
+
+            <div class="keyword-quick-tags">
+              <span class="kw-tag-label">Pilihan Cepat Tag:</span>
+              <button type="button" class="kw-tag-btn" data-tag="undiksha">+ undiksha (Umum)</button>
+              <button type="button" class="kw-tag-btn" data-tag="ukt undiksha">+ ukt undiksha (Biaya)</button>
+              <button type="button" class="kw-tag-btn" data-tag="siakad undiksha">+ siakad undiksha (Sistem)</button>
+              <button type="button" class="kw-tag-btn" data-tag="fasilitas undiksha">+ fasilitas undiksha
+                (Sarana)</button>
+              <button type="button" class="kw-tag-btn kw-tag-warn" data-tag="keluhan undiksha">+ keluhan undiksha (🚨
+                Isu Kritis)</button>
+            </div>
+          </div>
+
+          <div class="cfg-controls-grid">
+            <!-- Rentang Waktu (Hari) -->
+            <div class="cfg-slider-card">
+              <div class="cfg-slider-header">
+                <label for="cfg-fetch-days" class="cfg-label">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+                    <line x1="16" y1="2" x2="16" y2="6" />
+                    <line x1="8" y1="2" x2="8" y2="6" />
+                    <line x1="3" y1="10" x2="21" y2="10" />
+                  </svg>
+                  <span>Rentang Waktu:</span>
+                </label>
+                <div class="cfg-val-badge"><span id="cfg-days-display">7</span> Hari</div>
+              </div>
+              <div class="slider-row">
+                <input type="range" id="cfg-fetch-days-slider" min="1" max="60" value="7" class="custom-range">
+                <input type="number" id="cfg-fetch-days" min="1" max="90" value="7" class="styled-number-input">
+              </div>
+              <div class="quick-chip-row">
+                <button type="button" class="cfg-chip" data-val="3">3 Hari</button>
+                <button type="button" class="cfg-chip active" data-val="7">7 Hari</button>
+                <button type="button" class="cfg-chip" data-val="14">14 Hari</button>
+                <button type="button" class="cfg-chip" data-val="30">30 Hari</button>
+              </div>
+            </div>
+
+            <!-- Batas Konten / Video -->
+            <div class="cfg-slider-card">
+              <div class="cfg-slider-header">
+                <label for="cfg-fetch-posts" class="cfg-label">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="23 7 16 12 23 17 23 7" />
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+                  </svg>
+                  <span>Batas Konten per Platform:</span>
+                </label>
+                <div class="cfg-val-badge"><span id="cfg-posts-display">20</span> Konten</div>
+              </div>
+              <div class="slider-row">
+                <input type="range" id="cfg-fetch-posts-slider" min="5" max="100" value="20" class="custom-range">
+                <input type="number" id="cfg-fetch-posts" min="5" max="100" value="20" class="styled-number-input">
+              </div>
+              <div class="quick-chip-row">
+                <button type="button" class="cfg-chip-post" data-val="10">10 Post</button>
+                <button type="button" class="cfg-chip-post active" data-val="20">20 Post</button>
+                <button type="button" class="cfg-chip-post" data-val="30">30 Post</button>
+                <button type="button" class="cfg-chip-post" data-val="50">50 Post</button>
+              </div>
+            </div>
+
+            <!-- Maks Komentar per Konten -->
+            <div class="cfg-slider-card">
+              <div class="cfg-slider-header">
+                <label for="cfg-fetch-comments" class="cfg-label">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                  </svg>
+                  <span>Maks Komentar per Konten:</span>
+                </label>
+                <div class="cfg-val-badge"><span id="cfg-comments-display">50</span> Komen</div>
+              </div>
+              <div class="slider-row">
+                <input type="range" id="cfg-fetch-comments-slider" min="5" max="200" step="5" value="50"
+                  class="custom-range">
+                <input type="number" id="cfg-fetch-comments" min="5" max="200" value="50" class="styled-number-input">
+              </div>
+              <div class="quick-chip-row">
+                <button type="button" class="cfg-chip-comm" data-val="20">20 Komen</button>
+                <button type="button" class="cfg-chip-comm active" data-val="50">50 Komen</button>
+                <button type="button" class="cfg-chip-comm" data-val="100">100 Komen</button>
+              </div>
+            </div>
+
+            <!-- Prioritas Isu Negatif Checkbox -->
+            <div class="cfg-slider-card cfg-card-highlight">
+              <div class="cfg-checkbox-row">
+                <input type="checkbox" id="cfg-fetch-prioritize-neg" class="styled-checkbox" checked>
+                <label for="cfg-fetch-prioritize-neg" class="cfg-checkbox-label">
+                  <strong>🔥 Utamakan Deteksi Isu Negatif & Keluhan</strong>
+                  <span>Sistem akan memprioritaskan ekstraksi keluhan publik, menonjolkan sentimen negatif, dan memberi
+                    bobot lebih tinggi pada masalah kritis.</span>
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Estimate Summary Banner -->
+        <div class="cfg-summary-banner" id="cfg-live-summary">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="12" y1="16" x2="12" y2="12" />
+            <line x1="12" y1="8" x2="12.01" y2="8" />
+          </svg>
+          <div id="cfg-summary-text">
+            Memuat estimasi...
+          </div>
+        </div>
+      </div>
+
+      <div class="fetch-modal-footer">
+        <button type="button" class="btn-cancel" id="btn-cancel-fetch-modal"
+          onclick="closeFetchConfigModal()">Batal</button>
+        <button type="button" class="btn-primary-action btn-submit-fetch" id="btn-submit-fetch-modal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+          </svg>
+          <span id="btn-submit-fetch-text">Mulai Penarikan & Analisis</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────── MODAL KOREKSI LABEL (HUMAN-IN-THE-LOOP) ──────────────── -->
+  <div class="modal-backdrop edit-modal-backdrop" id="edit-modal-backdrop" style="display: none !important;">
+    <div class="edit-modal-card">
+      <div class="edit-modal-header">
+        <div class="edit-modal-title">
+          <span>✏️ Koreksi Label Opini (Human-in-the-Loop)</span>
+        </div>
+        <button type="button" class="edit-modal-close" id="btn-close-edit-modal" title="Tutup">&times;</button>
+      </div>
+      <div class="edit-modal-body">
+        <div class="edit-form-group">
+          <label class="edit-form-label">Teks Opini Asli:</label>
+          <div class="edit-opinion-text" id="edit-modal-text">-</div>
+        </div>
+        <div class="edit-form-grid">
+          <div class="edit-form-group">
+            <label class="edit-form-label" for="edit-select-sentiment">Koreksi Sentimen:</label>
+            <select id="edit-select-sentiment" class="styled-select">
+              <option value="positif">Positif</option>
+              <option value="netral">Netral</option>
+              <option value="negatif">Negatif</option>
+            </select>
+          </div>
+          <div class="edit-form-group">
+            <label class="edit-form-label" for="edit-select-aspect">Koreksi Aspek:</label>
+            <select id="edit-select-aspect" class="styled-select">
+              <option value="layanan_administrasi">Layanan Administrasi</option>
+              <option value="fasilitas">Fasilitas Kampus</option>
+              <option value="kemahasiswaan">Kemahasiswaan</option>
+              <option value="akademik">Akademik</option>
+              <option value="penerimaan_biaya">Penerimaan & Biaya</option>
+              <option value="lulusan_karier">Lulusan & Karier</option>
+              <option value="isu_citra">Isu Citra Kampus</option>
+              <option value="lainnya">Lainnya</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      <div class="edit-modal-footer">
+        <button type="button" class="btn-spam-danger" id="btn-mark-spam">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+          </svg>
+          <span>Tandai Spam / Iklan</span>
+        </button>
+        <div class="edit-modal-actions-right">
+          <button type="button" class="btn-cancel" id="btn-cancel-edit">Batal</button>
+          <button type="button" class="btn-gradient" id="btn-save-edit">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            <span>Simpan Koreksi</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ──────────────── MODAL DRILL-DOWN SENTIMEN ISU & KATA KUNCI ──────────────── -->
+  <div class="modal-backdrop edit-modal-backdrop" id="wi-sentiment-drilldown-modal" style="display: none !important;">
+    <div class="edit-modal-card drilldown-modal-card">
+      <div class="edit-modal-header">
+        <div class="edit-modal-title">
+          <span id="drilldown-modal-title">📊 Analisis Sentimen & Opini Publik</span>
+        </div>
+        <button type="button" class="edit-modal-close" id="btn-close-drilldown-modal" title="Tutup">&times;</button>
+      </div>
+      <div class="edit-modal-body drilldown-modal-body">
+        <!-- Ringkasan Distribusi Sentimen -->
+        <div class="drilldown-summary-grid">
+          <div class="dd-stat-box dd-stat-total">
+            <span class="dd-stat-val" id="dd-total-count">0</span>
+            <span class="dd-stat-lbl">Total Opini</span>
+          </div>
+          <div class="dd-stat-box dd-stat-pos">
+            <span class="dd-stat-val" id="dd-pos-count">0 (0%)</span>
+            <span class="dd-stat-lbl">Positif</span>
+          </div>
+          <div class="dd-stat-box dd-stat-neu">
+            <span class="dd-stat-val" id="dd-neu-count">0 (0%)</span>
+            <span class="dd-stat-lbl">Netral</span>
+          </div>
+          <div class="dd-stat-box dd-stat-neg">
+            <span class="dd-stat-val" id="dd-neg-count">0 (0%)</span>
+            <span class="dd-stat-lbl">Negatif</span>
+          </div>
+        </div>
+
+        <!-- Stacked Sentiment Bar -->
+        <div class="dd-progress-track">
+          <div class="dd-progress-seg seg-pos" id="dd-bar-pos" style="width: 0%;"></div>
+          <div class="dd-progress-seg seg-neu" id="dd-bar-neu" style="width: 0%;"></div>
+          <div class="dd-progress-seg seg-neg" id="dd-bar-neg" style="width: 0%;"></div>
+        </div>
+
+        <!-- Filter Sentimen -->
+        <div class="dd-filter-tabs" id="dd-filter-tabs">
+          <button type="button" class="dd-tab-btn active" data-sent="all">Semua</button>
+          <button type="button" class="dd-tab-btn" data-sent="positif">🟢 Positif</button>
+          <button type="button" class="dd-tab-btn" data-sent="netral">⚪ Netral</button>
+          <button type="button" class="dd-tab-btn" data-sent="negatif">🔴 Negatif</button>
+        </div>
+
+        <!-- Daftar Opini & Sentimen -->
+        <div class="dd-opinions-list" id="dd-opinions-list">
+          <div class="text-center text-muted" style="padding: 2rem;">Memuat data sentimen...</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- Custom JS -->
   <script src="/static/js/main.js"></script>
 </body>
+
 </html>

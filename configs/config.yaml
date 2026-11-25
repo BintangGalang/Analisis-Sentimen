@@ -9,25 +9,46 @@ seed: 42
 
 # --- Path Data ---
 paths:
-  raw_dir:       "data/raw"
-  interim_dir:   "data/interim"
-  processed_dir: "data/processed"
-  labeled_dir:   "data/labeled"
-  reports_dir:   "reports"
-  figures_dir:   "reports/figures"
-  tables_dir:    "reports/tables"
-  models_dir:    "models"
-  logs_dir:      "logs"
+  raw_dir:            "data/raw"
+  raw_data_dir:       "data/raw"
+  interim_dir:        "data/interim"
+  processed_dir:      "data/processed"
+  processed_data_dir: "data/processed"
+  labeled_dir:        "data/labeled"
+  sessions_dir:       "configs/sessions"
+  reports_dir:        "reports"
+  figures_dir:        "reports/figures"
+  tables_dir:         "reports/tables"
+  models_dir:         "models"
+  logs_dir:           "logs"
 
   # Kamus & Lexicon
-  slang_dict:    "data/interim/slang_dict.json"
-  inset_lexicon: "data/interim/inset_lexicon.tsv"
+  slang_dict:         "data/interim/slang_dict.json"
+  inset_lexicon:      "data/interim/inset_lexicon.tsv"
 
-# --- Platform & Kata Kunci Pencarian ---
+# --- Platform & Pengaturan Target ---
 platforms:
-  - twitter
-  - youtube
-  - instagram
+  instagram:
+    enabled: true
+    tag_url: "https://www.instagram.com/explore/tags/undiksha/"
+    session_file: "configs/sessions/instagram_session.json"
+  facebook:
+    enabled: true
+    search_url: "https://www.facebook.com/search/posts/?q=undiksha"
+    session_file: "configs/sessions/facebook_session.json"
+  threads:
+    enabled: true
+    search_url: "https://www.threads.net/search?q=%23undiksha"
+    session_file: "configs/sessions/threads_session.json"
+  tiktok:
+    enabled: true
+    tag_url: "https://www.tiktok.com/tag/undiksha"
+    search_url: "https://www.tiktok.com/search?q=undiksha"
+    session_file: "configs/sessions/tiktok_session.json"
+  twitter:
+    enabled: true
+  youtube:
+    enabled: true
 
 search_keywords:
   - "Undiksha"
@@ -140,8 +161,91 @@ evaluation:
     - recall_macro
     - f1_macro
 
+# --- Pemantauan Isu Mingguan ---
+weekly_monitoring:
+  window_days: 7
+  min_mentions: 5
+  raw_dir: "data/raw/weekly"
+  input_dir: "data/weekly_input"
+  predictions_file: "data/processed/weekly_predictions.parquet"
+  issues_file: "data/processed/weekly_issues.csv"
+  weights:
+    volume: 0.30
+    sentiment: 0.45
+    growth: 0.25
+  thresholds:
+    high_alert: 65.0
+    medium_alert: 40.0
+
 # --- Logging ---
 logging:
   level:   "INFO"    # DEBUG, INFO, WARNING, ERROR
   format:  "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
   to_file: true
+
+# ============================================================
+# Konfigurasi Pipeline Scraping & Pengolahan Data Multi-Platform
+# ============================================================
+target_hashtag: "#undiksha"
+query_keyword: "undiksha"
+
+scraping:
+  default_post_limit: 50
+  max_comments_per_post: 50
+  headless: false              # Set false agar bisa melihat proses atau saat login awal
+  slow_mo: 1000                # Delay milidetik antar aksi (agar natural seperti manusia)
+  timeout: 60000               # 60 detik timeout
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36"
+  viewport:
+    width: 1280
+    height: 800
+
+# Pengaturan Sesi & URL Platform Scraper
+platforms_scraper:
+  instagram:
+    enabled: true
+    tag_url: "https://www.instagram.com/explore/tags/undiksha/"
+    session_file: "configs/sessions/instagram_session.json"
+  facebook:
+    enabled: true
+    search_url: "https://www.facebook.com/search/posts/?q=undiksha"
+    session_file: "configs/sessions/facebook_session.json"
+  threads:
+    enabled: true
+    search_url: "https://www.threads.net/search?q=%23undiksha"
+    session_file: "configs/sessions/threads_session.json"
+  tiktok:
+    enabled: true
+    tag_url: "https://www.tiktok.com/tag/undiksha"
+    search_url: "https://www.tiktok.com/search?q=undiksha"
+    session_file: "configs/sessions/tiktok_session.json"
+
+cleaning:
+  remove_urls: true
+  remove_mentions: true
+  remove_hashtags: false
+  remove_emojis: false
+  lowercase: false
+  min_text_length: 3
+
+sentiment_analysis:
+  labeling:
+    default_method: "hybrid"    # hybrid (IndoBERT+Leksikon), indobert, lexicon
+    model_name: "mdhugol/indonesia-bert-sentiment-classification"
+    batch_size: 32
+    confidence_threshold: 0.75
+    audit_file: "data/processed/undiksha_labeling_audit.xlsx"
+  lexicon:
+    neutral_threshold: 0.0
+    negation_window: 2
+    booster_multiplier: 1.6
+  modeling:
+    default_model: "svm"        # svm, complement_nb, random_forest, logistic_regression, naive_bayes
+    class_weight: "balanced"
+    test_size: 0.2
+    random_state: 42
+    models_dir: "models"
+  visualization:
+    figures_dir: "reports/figures"
+    dpi: 300
+

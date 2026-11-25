@@ -37,10 +37,66 @@ _RE_REPEATED = re.compile(r"(.)\1{2,}")      # karakter berulang >2x → 2x
 _RE_MULTI_WS = re.compile(r"\s+")            # spasi berulang → satu spasi
 _RE_NON_ALPHA_EDGE = re.compile(r"^[^\w]+|[^\w]+$")  # noise di awal/akhir token
 
+# Pola regex deteksi iklan komersial non-opini
+COMMERCIAL_SPAM_PATTERNS = [
+    r'\bdi\s*jual\s+(tanah|rumah|ruko|kavling|bangunan|villa|kos|kost)\b',
+    r'\btanah\s+(kavling|premium|murah|dijual|siap\s+bangun)\b',
+    r'\b(shm|imb)\b',
+    r'\bsertifikat\s+hak\s+milik\b',
+    r'\bluas\s*:\s*\d+.*are\b',
+    r'\bharga\s*:\s*.*per\s*are\b',
+    r'\brumah\s+\d+\s+kamar\s+siap\s+huni\b',
+    r'\bterima\s+(kost|kos|kontrakan|sewa\s+kamar)\b',
+    r'\b(kost|kos)\s+exclusive\b',
+    r'\[\s*kost\s+dekat\s+kampus',
+    r'\bready\s+(\d+\s+)?(kamar|kos|kost)\b',
+    r'\b\d+k\s*/\s*(bln|bulan)\b',
+    r'\bkamar\s+mandi\s+(luar|dalam)\b',
+    r'\bdi\s*sewakan\s+(kamar|kos|kost|rumah|kontrakan)\b',
+    r'\bdikontrakan\b',
+    r'\bover\s+sewa\b',
+    r'\bbagi\s+yang\s+berminat\s+bisa\s+langsung\s+dm\b',
+    r'\bminat\s+dm\s+ya\b',
+    r'\bminat\s*\?\?\s*(dm|wa)\b',
+    r'\bjasa\s+joki\b',
+    r'\bjoki\s+(tugas|skripsi|makalah|krs|laporan|ujian|ospek)\b',
+    r'\bopen\s+joki\b',
+    r'\breadystock\b',
+    r'\bhubungi\s+wa\s*:?\s*\d+',
+    r'\bwa\s*:\s*08\d+',
+    r'\bjasa\s+profesional\s+photo(box|booth)\b',
+]
+_RE_COMMERCIAL_SPAM = re.compile('|'.join(COMMERCIAL_SPAM_PATTERNS), re.IGNORECASE)
+
 
 # ─────────────────────────────────────────────────────────────
 # Fungsi Pembersihan Individual
 # ─────────────────────────────────────────────────────────────
+
+def remove_boilerplate(text: str) -> str:
+    """Menghapus redaksi boilerplate UI media sosial (badge penulis, tombol lihat selengkapnya, tag arsip, timestamp edit)."""
+    if not isinstance(text, str) or not text.strip():
+        return ""
+    cleaned = text
+    cleaned = re.sub(r'\[\s*ARSIP[^\]]*\]', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'\(\s*ARSIP[^\)]*\)', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^\s*(Pembuat|Penulis|Penggemar\s+Berat|Top\s+Fan|Kontributor\s+Utama)\s*[\r\n]+', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^\s*(Pembuat|Penulis|Penggemar\s+Berat|Top\s+Fan|Kontributor\s+Utama)\s+', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^\s*(Pembuat|Penulis)\s*$', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'Telah\s+disunting(\s*•\s*\d+\s*(ming|hr|bln|thn|hari|minggu|bulan|tahun|m|w|d|h|s))?', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'^\s*\d+\s*(ming|hr|bln|thn|hari|minggu|bulan|tahun)\s*[\r\n]+', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'•\s*\d+\s*(ming|hr|bln|thn|hari|minggu|bulan|tahun|m|w|d|h|s)', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'(\.{2,}|…)?\s*(Lihat|Baca)\s+(selengkapnya|lebih\s+banyak)\b.*', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'(\.{2,}|…)?\s*See\s+more\b.*', '', cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r'(\.{2,}|…)?\s*Lihat\s+terjemahan\b.*', '', cleaned, flags=re.IGNORECASE)
+    return cleaned.strip(' .\t\r\n-–—…')
+
+
+def is_commercial_spam(text: str) -> bool:
+    """Mendeteksi apakah teks merupakan iklan komersial non-opini kampus."""
+    if not isinstance(text, str) or not text.strip():
+        return False
+    return bool(_RE_COMMERCIAL_SPAM.search(text))
 
 def to_lowercase(text: str) -> str:
     """Mengubah seluruh teks menjadi huruf kecil.
@@ -156,11 +212,12 @@ def normalize_whitespace(text: str) -> str:
 
 def clean_text(
     text: str,
-    lowercase:        bool = True,
-    remove_url:       bool = True,
-    remove_mention:   bool = True,
-    norm_hashtag:     bool = True,
-    reduce_repeated:  bool = True,
+    lowercase:          bool = True,
+    remove_url:         bool = True,
+    remove_mention:     bool = True,
+    norm_hashtag:       bool = True,
+    reduce_repeated:    bool = True,
+    remove_bp:          bool = True,
 ) -> str:
     """Menjalankan semua tahap pembersihan dasar secara berurutan.
 
@@ -174,6 +231,7 @@ def clean_text(
         remove_mention  : Apakah mention dihapus.
         norm_hashtag    : Apakah hashtag dinormalisasi.
         reduce_repeated : Apakah karakter berulang dikurangi.
+        remove_bp       : Apakah boilerplate medsos dihapus.
 
     Returns:
         Teks yang sudah dibersihkan.
@@ -188,6 +246,8 @@ def clean_text(
 
     result = text
 
+    if remove_bp:
+        result = remove_boilerplate(result)
     if lowercase:
         result = to_lowercase(result)
     if remove_url:

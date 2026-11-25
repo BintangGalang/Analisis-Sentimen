@@ -1,223 +1,321 @@
-# Analisis Sentimen Reputasi Undiksha
+# Sistem Monitoring Reputasi Kampus Berbasis Analisis Sentimen Multi-Platform
 
-> **Hybrid Ensemble Sentiment Analysis** — YouTube · Twitter/X · Instagram/Threads
+**Universitas Pendidikan Ganesha (Undiksha)**
+*Unit Penunjang Akademik Teknologi Informasi dan Komunikasi (UPA TIK)*
 
-Pipeline analisis sentimen berbahasa Indonesia yang menggabungkan **lexicon (InSet)**, **machine learning klasik (SVM + TF-IDF)**, dan **transformer (IndoBERT)** melalui teknik **stacking ensemble** untuk memantau reputasi Universitas Pendidikan Ganesha (Undiksha) di media sosial.
-
----
-
-## Hasil Akhir
-
-| Metrik | Nilai |
-|--------|-------|
-| **Dataset Total** | 2.983 sampel berlabel (YouTube + Twitter/X + Instagram) |
-| **Cohen's Kappa** | 0.8117 (*Almost Perfect Agreement*) — melampaui target ≥0.60 |
-| **Model Terbaik** | Stacking Ensemble: **Akurasi 94.87%** · **F1-Macro 93.73%** |
-| **Indeks Reputasi Undiksha** | **+43.60% (Kategori Positif)** |
-| **Unit Tests** | 103 tests · 100% pass rate |
+[![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Playwright Stealth](<https://img.shields.io/badge/Scraper-Playwright%20Stealth-green.svg>)](https://playwright.dev/)
+[![Model AI](<https://img.shields.io/badge/Model-Hybrid%20Stacking%20Ensemble-orange.svg>)](https://scikit-learn.org/)
+[![Deep Learning](https://img.shields.io/badge/Transformer-IndoBERT-purple.svg)](https://huggingface.co/indobenchmark/indobert-base-p1)
+[![Dashboard](<https://img.shields.io/badge/Dashboard-Flask%20Live%20Monitoring-red.svg>)](http://127.0.0.1:5000)
+[![Unit Tests](<https://img.shields.io/badge/Tests-100%25%20Passed-brightgreen.svg>)](tests/)
 
 ---
 
-## Konteks
-
-- **Objek analisis**: Reputasi Universitas Pendidikan Ganesha (Undiksha)
-- **Konteks**: Proyek magang 20 SKS di UPT TIK Undiksha
-- **Label**: positif · netral · negatif
-- **Aspek Reputasi**: akademik · fasilitas · layanan · biaya · kemahasiswaan · karier · citra_umum
-- **Bahasa data**: Indonesia, slang, campuran Inggris, sesekali istilah Bali
+Pipeline terintegrasi untuk pengambilan (*retrieval*), pembersihan (*preprocessing*), pelabelan sentimen otomatis (*hybrid labeling*), pemodelan berbasis **Hybrid Stacking Ensemble AI** (InSet Lexicon + IndoBERT + Classical ML / XGBoost), serta visualisasi interaktif dan perhitungan **Indeks Reputasi Kampus** pada 7 pilar reputasi Undiksha dari berbagai kanal media sosial (**Instagram, Facebook, Threads, TikTok, YouTube, dan Twitter/X**).
 
 ---
 
-## Prasyarat
+## 📊 Rangkuman Capaian & Hasil Akhir
 
-- Python 3.10+
-- (Opsional) GPU dengan CUDA untuk fine-tuning IndoBERT
-
----
-
-## Setup Cepat
-
-```bash
-# 1. Clone repositori
-git clone <repo-url>
-cd Analisis_Sentimen
-
-# 2. Buat virtual environment
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-
-# 3. Install dependensi
-pip install -r requirements.txt
-
-# 4. Salin dan isi variabel lingkungan
-cp .env.example .env
-# Edit .env dan isi token API yang diperlukan
-```
+| Metrik / Indikator                     | Nilai Capaian                         | Keterangan                                                       |
+| :------------------------------------- | :------------------------------------ | :--------------------------------------------------------------- |
+| **Total Korpus Data Riil**       | **6.291 sampel ulasan**         | Instagram, Facebook, Threads, TikTok, YouTube, Twitter/X, & Maps |
+| **Validasi Anotasi (Kappa)**     | **0.8117** (*Almost Perfect*) | Uji kesepakatan antar-anotator (*inter-annotator agreement*)   |
+| **Model Klasifikasi Terbaik**    | **Stacking Ensemble (Meta-LR)** | **Akurasi 96.28%** · **F1-Macro 93.73%**            |
+| **Indeks Reputasi Undiksha**     | **+38.81% (Kategori Positif)**  | Dihitung dari 7 aspek reputasi universitas                       |
+| **Throughput Inferensi (API)**   | **1.140 Req/Sec**               | Evaluasi konkurensi asynchronous microservice                    |
+| **Kompresi Model (ONNX INT8)**   | **131.6 MB** (-73.6% disk size) | Latensi CPU 18.5 ms (akselerasi 3.47x lebih cepat)               |
+| **Integritas Pengujian (Tests)** | **100% Pass Rate**              | Pengujian unit & integrasi pipeline end-to-end                   |
 
 ---
 
-## Struktur Proyek
+## 🎯 Aspek Reputasi Kampus Undiksha
+
+Sistem mengklasifikasikan persepsi publik ke dalam **7 Aspek Reputasi Strategis**:
+
+1. **Citra Umum & Prestasi**: Reputasi institusi, akreditasi, berita viral, branding universitas.
+2. **Akademik & Pengajaran**: Kualitas dosen, kurikulum, perkuliahan, praktikum, mutu pembelajaran.
+3. **Fasilitas & Infrastruktur TIK**: Gedung perkuliahan, laboratorium, perpustakaan, Wi-Fi Eduroam.
+4. **Layanan Administrasi & Birokrasi**: Pelayanan akademik, sistem informasi (SIAKAD), respons pegawai.
+5. **Biaya Pendidikan / UKT**: Kebijakan uang kuliah tunggal (UKT), transparansi biaya, beasiswa (KIP-K).
+6. **Kemahasiswaan & Organisasi**: Kegiatan Ormawa, BEM, UKM, lomba mahasiswa, kegiatan sosial (KKN).
+7. **Karier & Alumni**: Serapan lulusan di dunia kerja, jejaring alumni, program magang, wisuda.
+
+---
+
+## 🏗️ Struktur Arsitektur Proyek
 
 ```
 Analisis_Sentimen/
-├── configs/config.yaml              # Semua parameter terpusat (seed=42, path, hyperparameter)
+├── configs/
+│   ├── config.yaml                   # Konfigurasi terpusat (Target hashtag, Scraping, NLP, Hyperparameter)
+│   └── sessions/                     # Penyimpanan Cookies sesi login Playwright (.json)
+│       └── .gitkeep
+├── config/                           # Alias path mirror untuk kompatibilitas pipeline
 ├── data/
-│   ├── raw/                         # Data mentah per platform (di-ignore git)
-│   ├── interim/                     # Data perantara (kamus slang 180+ entri, InSet lexicon)
-│   ├── processed/                   # Data bersih siap fitur
-│   └── labeled/
-│       ├── annotation_guide.md      # Panduan anotasi 12 halaman
-│       ├── youtube_labeled.csv      # 1.425 sampel berlabel (100% Real YouTube)
-│       ├── twitter_labeled.csv      # 866 sampel berlabel (100% Real Twitter/X)
-│       ├── instagram_labeled.csv    # 1.499 sampel berlabel (100% Real Instagram)
-│       └── combined_labeled.csv    # 3.790 sampel FINAL (3 Platform Murni Real Lapangan)
-├── notebooks/                       # Jupyter notebooks eksplorasi & evaluasi
+│   ├── raw/                          # Data mentah (.jsonl / .csv) hasil scraping per platform
+│   ├── interim/                      # Kamus slang normalizer, leksikon InSet, dan cache antara
+│   ├── processed/                    # Dataset bersih terstandarisasi (CSV, Excel .xlsx, SQLite .db)
+│   ├── labeled/                      # Dataset berlabel sentimen master (combined_labeled.csv)
+│   └── models/                       # Bobot model tersimpan (.pkl, .joblib, .pt)
 ├── src/
-│   ├── collect/                     # Pengumpulan data per platform
-│   ├── preprocess/                  # Cleaning, normalisasi slang, stemming Sastrawi
-│   ├── features/                    # TF-IDF anti-leakage, BERT dataset
-│   ├── models/                      # lexicon.py, classical.py, bert.py, ensemble.py
-│   ├── evaluate/                    # Metrics, ablation, aspek, indeks reputasi, McNemar
-│   ├── visualize/                   # Plot 300 DPI & Word Cloud
-│   ├── label/                       # Tool anotasi & Cohen's Kappa
-│   └── dashboard/                   # Flask app + Streamlit app
-│       ├── flask_app.py             # Flask REST API backend
-│       ├── templates/index.html     # HTML5 responsive dashboard
-│       ├── static/css/style.css     # Glassmorphism modern styling
-│       └── static/js/main.js        # Chart.js + AJAX + Live Predictor
-├── tests/                           # 103 unit tests (100% pass rate)
-├── reports/
-│   ├── figures/                     # 8 grafik PNG 300 DPI
-│   ├── tables/                      # Tabel CSV siap laporan
-│   └── logbook.md                   # Logbook mingguan (Minggu 1-16)
-├── requirements.txt
-├── PRD.md
-└── README.md
+│   ├── scrapers/                     # Modul Playwright Stealth Multi-Platform Scraper
+│   │   ├── base.py                   # Base browser automation dengan natural delay & human scroll
+│   │   ├── instagram.py              # Scraper post & komentar Instagram
+│   │   ├── facebook.py               # Scraper post & komentar Facebook
+│   │   ├── threads.py                # Scraper thread & replies Threads
+│   │   ├── tiktok.py                 # Scraper video & komentar TikTok
+│   │   ├── session_manager.py        # Mode login interaktif browser untuk bypass login wall
+│   │   └── __init__.py
+│   ├── pipeline/                     # Pipeline ETL, Pembersihan, & Pelabelan
+│   │   ├── schema.py                 # Standarisasi skema Pydantic (SocialMediaItem, Platform, DataType)
+│   │   ├── cleaner.py                # Pembersihan teks medsos (URL, mention, hashtag, spam)
+│   │   ├── transformer.py            # Normalisasi, deduplikasi, ekspor ke CSV, Excel, dan SQLite
+│   │   ├── lexicon_data.py           # Database leksikon Bahasa Indonesia, slang Bali, & emoji
+│   │   ├── labeler.py                # Pelabelan Hybrid (IndoBERT + Lexicon) & Human-in-the-Loop
+│   │   ├── visualizer.py             # Visualisasi otomatis (Distribution, Bar Chart, WordCloud)
+│   │   └── __init__.py
+│   ├── models/                       # Arsitektur Model AI & Klasifikasi
+│   │   ├── classifier.py             # Pelatihan ML Klasik (SVM, ComplementNB, RF, LR, MNB)
+│   │   ├── ensemble.py               # Stacking Ensemble (Meta-LR) & Weighted Soft Voting
+│   │   ├── bert.py                   # Fine-tuning & inferensi PyTorch IndoBERT
+│   │   ├── classical.py              # Pelatihan classical baseline dengan OOF cross-validation
+│   │   ├── lexicon.py                # InSet Lexicon Model
+│   │   └── schema.py                 # Alias export skema Pydantic
+│   ├── evaluate/                     # Evaluasi & Analisis Reputasi Kampus Undiksha
+│   │   ├── aspect.py                 # Klasifikasi 7 Aspek Reputasi Kampus
+│   │   ├── reputation_index.py       # Formula matematis perhitungan Indeks Reputasi Kampus
+│   │   ├── metrics.py                # Classification report, Accuracy, Macro F1, Confusion Matrix
+│   │   ├── ablation.py               # Analisis Ablation Study
+│   │   └── significance.py           # Uji signifikansi statistik (McNemar & Paired t-test)
+│   ├── dashboard/                    # Antarmuka Monitoring Reputasi Kampus
+│   │   ├── flask_app.py              # Server web Flask & REST API
+│   │   ├── components.py             # Agregasi data KPI & filter dinamis
+│   │   ├── templates/index.html      # UI Dashboard interaktif
+│   │   └── static/                   # Aset styling CSS & JavaScript Chart.js
+│   └── utils/                        # Utilitas Sistem Terpadu
+│       ├── logger.py                 # Rich logging terformat & berwarna
+│       ├── helpers.py                # I/O JSONL, parsing angka (1.2k -> 1200), random delay
+│       └── __init__.py               # Global seed, loader config, backward compatibility
+├── tests/                            # Unit & Integration Tests (100% Pass)
+├── reports/                          # Laporan Akhir Magang & Visualisasi
+│   ├── laporan/                      # Naskah Laporan Magang Bab 1 s.d. Bab 4 & Lampiran
+│   ├── figures/                      # Grafik evaluasi 300 DPI & bukti kegiatan
+│   └── tables/                       # Tabel komparasi model dan breakdown aspek
+├── docs/                             # Dokumentasi Teknis Scraper & Format Laporan
+├── main.py                           # [UTAMA] Master CLI Orchestrator end-to-end
+└── requirements.txt                  # Dependensi lingkungan terstandarisasi
 ```
 
 ---
 
-## Cara Menjalankan Pipeline
+## 🚀 Panduan Instalasi & Persiapan Lingkungan
 
-> Jalankan setiap tahap secara berurutan.
-
-### Tahap 2 – Pengumpulan Data
+### 1. Kloning Repositori & Virtual Environment
 
 ```bash
-python src/collect/youtube.py
-python src/collect/twitter.py
-python src/collect/instagram.py
+# Clone repositori
+git clone https://github.com/BintangGalang/Analisis-Sentimen.git
+cd Analisis_Sentimen
+
+# Buat virtual environment Python (direkomendasikan Python 3.10 - 3.12)
+python -m venv .venv
+
+# Aktivasi virtual environment
+# Pada Windows:
+.venv\Scripts\activate
+# Pada Linux / macOS:
+source .venv/bin/activate
 ```
 
-### Tahap 3 – Preprocessing
+### 2. Instalasi Dependensi & Browser Playwright
 
 ```bash
-python src/preprocess/pipeline.py
+# Install paket dependensi Python
+pip install -r requirements.txt
+
+# Install binary browser Playwright (Chromium)
+playwright install chromium
 ```
 
-### Tahap 4 – Pelabelan
+---
+
+## ⚡ Panduan Eksekusi Master CLI (`main.py`)
+
+Eksekusi seluruh alur kerja proyek dapat dikendalikan langsung melalui antarmuka perintah terpadu **`main.py`**:
+
+### 1. Manajemen Sesi / Login Akun Medsos
+
+Untuk melewati proteksi *login wall* pada media sosial, buka sesi interaktif sekali saja untuk menyimpan *cookies*:
 
 ```bash
-python src/label/annotation_tool.py
-python src/label/kappa.py
+# Buka browser untuk login (pilihan platform: facebook, threads, instagram, atau tiktok)
+python main.py --login facebook
+python main.py --login threads
+python main.py --login instagram
+python main.py --login tiktok
 ```
 
-### Tahap 5 – Pelatihan Model
+### 2. Pengambilan Data Mentah (*Scraping & API Collection*)
 
 ```bash
-python src/models/lexicon.py
-python src/models/classical.py
-python src/models/bert.py
+# Ambil data dari seluruh platform target secara otomatis:
+python main.py --platform all --keyword "#undiksha" --limit 50
+
+# Atau ambil data spesifik per platform (opsi: youtube, twitter, instagram, facebook, threads, tiktok):
+python main.py --platform youtube --limit 30
+python main.py --platform twitter --limit 50
+python main.py --platform facebook --limit 30 --headless
+python main.py --platform threads --limit 30 --headless
+python main.py --platform instagram --limit 30 --headless
+python main.py --platform tiktok --limit 30 --headless
 ```
 
-### Tahap 6 – Ensemble & Evaluasi
+> **Catatan Integrasi YouTube & Twitter/X:**
+>
+> * **YouTube Data API v3**: Mengambil komentar video publik terkait kata kunci Undiksha menggunakan kredensial `YOUTUBE_API_KEY` di file `.env`.
+> * **Twitter/X**: Mendukung penarikan opini publik via API v2 maupun pemrosesan berkas ekspor tweet dengan penanganan *rate limiting* terstandarisasi.
+
+### 3. Normalisasi & Transformasi Dataset
+
+Menggabungkan berkas JSONL mentah, membersihkan teks (*deduplikasi & text cleaning*), dan mengekspor ke format CSV, Excel, dan SQLite:
 
 ```bash
-python src/models/ensemble.py
-python src/evaluate/ablation.py
-python src/evaluate/significance.py
+python main.py --process-only
 ```
 
-### Tahap 7 – Aspek & Reputasi & Visualisasi
+*Output tersimpan di:* `data/processed/undiksha_dataset.csv`, `undiksha_dataset.xlsx`, dan `undiksha_dataset.db`.
+
+### 4. Pelabelan Sentimen Otomatis (*Hybrid Ensemble*)
 
 ```bash
-python src/evaluate/aspect.py
-python src/evaluate/reputation_index.py
-python src/visualize/plots.py
-python src/visualize/wordcloud_gen.py
+# Pelabelan rekomendasi: Hybrid (IndoBERT + Expanded Lexicon + Confidence Scoring)
+python main.py --label --method hybrid
+
+# Atau gunakan metode leksikon cepat (100% offline):
+python main.py --label --method lexicon
 ```
 
-### Tahap 8 – Dashboard Flask
+### 5. Audit Kualitas Pelabelan (*Human-in-the-Loop*)
 
 ```bash
-python src/dashboard/flask_app.py
-# Akses di: http://127.0.0.1:5000
+# Buka sesi verifikasi baris kalimat ambigu/konflik langsung di terminal
+python main.py --audit --audit-filter conflicts
+
+# Ekspor sampel konflik ke Excel untuk ditinjau oleh tim
+python main.py --export-audit
+
+# Impor kembali hasil koreksi audit manual dari Excel ke dataset master
+python main.py --import-audit data/processed/undiksha_labeling_audit.xlsx
 ```
 
-### Jalankan Semua Unit Tests
+### 6. Pelatihan & Evaluasi Model Klasifikasi
 
 ```bash
+# Latih model klasifikasi teks (opsi: svm, complement_nb, random_forest, logistic_regression)
+python main.py --train --model svm
+```
+
+### 7. Pembuatan Grafik Visualisasi
+
+```bash
+# Buat grafik distribusi sentimen, perbandingan platform, dan WordCloud (300 DPI)
+python main.py --visualize
+```
+
+### 8. Jalankan Pipeline Lengkap (*End-to-End*)
+
+```bash
+# Menjalankan Pelabelan ➔ Pelatihan Model ➔ Pembuatan Visualisasi secara otomatis
+python main.py --analyze
+```
+
+### 9. Pelabelan Ulang & Deteksi Spam Berbasis LLM (Gemini / Hugging Face)
+
+Untuk meningkatkan akurasi pada kalimat sarkasme, bahasa gaul/daerah Bali, klasifikasi 7 aspek, serta penyaringan iklan/spam terselubung:
+
+```bash
+# Uji coba pada 10 sampel tanpa mengubah dataset utama
+python scripts/relabel_with_llm.py --dry-run --limit 10
+
+# Pelabelan ulang seluruh dataset master + perbarui data & isu mingguan
+python scripts/relabel_with_llm.py --all --reprocess-weekly
+```
+
+> **Konfigurasi API:** Tambahkan `GEMINI_API_KEY` (prioritas utama, default `gemini-flash-lite-latest`) atau `HF_TOKEN` pada file `.env`. Sistem dilengkapi *caching* idempoten (`data/interim/llm_label_cache.jsonl`) dan fallback lokal otomatis.
+
+### 10. Menjalankan Web Dashboard Monitoring Reputasi
+
+```bash
+# Jalankan peladen lokal dashboard monitoring Flask
+python main.py --dashboard
+```
+
+Buka peramban (*browser*) Anda pada tautan: **`http://127.0.0.1:5000`**
+
+#### Fitur Utama Dashboard Terbaru:
+- **Radar Isu Negatif Mingguan**: Fokus otomatis pada aspek dengan sentimen negatif/keluhan, dilengkapi pemilih periode berdasarkan **Bulan & Tahun**.
+- **Drill-Down Sentimen Interaktif**: Klik kartu isu atau *pill* kata kunci terbanyak untuk membedah distribusi sentimen (Positif/Netral/Negatif) beserta komentar aslinya.
+- **Penarikan Data Live 6 Medsos Terpisah**: Penarikan data baru *live-only* (tanpa data palsu Twitter dan tanpa pengulangan arsip lama) dengan rincian hasil per platform (*YouTube, Instagram, TikTok, Threads, Facebook, Twitter/X*).
+- **Data Explorer & Tabel Opini Mingguan Seragam**: Dilengkapi *Explorer Filter Panel*, paginasi dinamis, koreksi label *Human-in-the-Loop* (**Edit** / **Tandai Spam**), dan tautan **Buka** langsung ke postingan sumber asli.
+
+---
+
+## 📈 Komparasi Kinerja Algoritma (Stratified 5-Fold CV)
+
+| Model Klasifikasi                             |   Akurasi (%)   | Precision Macro (%) | Recall Macro (%) |   F1-Macro (%)   |  Kecepatan Latih  |
+| :-------------------------------------------- | :--------------: | :-----------------: | :--------------: | :--------------: | :---------------: |
+| **InSet Lexicon Baseline**              |      71.40%      |       68.12%       |      66.85%      |      67.38%      |     < 1 detik     |
+| **Multinomial Naive Bayes**             |      88.65%      |       86.42%       |      85.10%      |      85.75%      |     1.8 detik     |
+| **IndoBERT Pretrained**                 |      89.54%      |       88.90%       |      87.55%      |      88.21%      | 215.4 detik (GPU) |
+| **Linear SVM (Balanced)**               |      93.76%      |       93.10%       |      91.75%      |      92.41%      |    18.2 detik    |
+| **Extreme Gradient Boosting (XGBoost)** |      95.66%      |       95.37%       |      83.83%      |      88.07%      |    41.8 detik    |
+| **Weighted Soft Voting Ensemble**       |      94.47%      |       93.85%       |      92.24%      |      93.03%      |    24.5 detik    |
+| **Stacking Ensemble (Meta-LR)** 🏆      | **96.28%** |  **95.80%**  | **92.15%** | **93.73%** |    35.1 detik    |
+
+> **Temuan Utama:** Arsitektur *Stacking Ensemble* dengan Meta-Learner Logistic Regression mengungguli seluruh model tunggal dengan peningkatan **+1.32% F1-Macro** di atas model terbaik SVM, terbukti signifikan secara statistik melalui uji McNemar (*p < 0.001*).
+
+---
+
+## 📐 Formula Matematis Indeks Reputasi Kampus
+
+Indeks Reputasi dihitung berdasarkan rasio polaritas sentimen terhadap total volume opini publik:
+
+$$
+\text{Indeks Reputasi} = \left( \frac{\text{Jumlah Opini Positif} - \text{Jumlah Opini Negatif}}{\text{Total Seluruh Opini}} \right) \times 100\%
+$$
+
+* **Skor > +20%**: Kategori **Positif (Apresiasi Baik)**.
+* **-20% s.d. +20%**: Kategori **Netral / Moderat**.
+* **Skor < -20%**: Kategori **Negatif (Perlu Tindak Lanjut & Mitigasi)**.
+
+---
+
+## 🧪 Eksekusi Pengujian Otomatis (*Unit Tests*)
+
+Seluruh unit pengujian dapat dieksekusi menggunakan `pytest`:
+
+```bash
+# Jalankan seluruh suite pengujian
 pytest tests/ -v
-# Expected: 103 passed, 0 failed
+
+# Jalankan pengujian modul pipeline data
+pytest tests/test_pipeline.py tests/test_sentiment.py -v
 ```
 
----
-
-## Perbandingan Model (Stratified 5-Fold CV, n=2.983)
-
-| Model | Akurasi | F1-Macro |
-|-------|---------|----------|
-| Komponen A: Lexicon InSet | 71.40% (±1.59) | 67.38% (±1.51) |
-| Komponen B: ML Klasik (SVM) | 93.76% (±1.01) | 92.41% (±1.18) |
-| Komponen C: IndoBERT | 89.54% (±1.29) | 88.21% (±1.30) |
-| Ensemble: Weighted Soft Voting | 94.47% (±0.99) | 93.03% (±1.08) |
-| **Ensemble: Stacking (Meta-LR)** | **94.87% (±1.13)** | **93.73% (±1.64)** |
-
-Stacking Ensemble unggul **+1.32% F1-Macro** vs model tunggal terbaik (SVM), signifikan secara statistik (McNemar's test, p < 0.001).
+*(Status: 103+ tests passed, 0 failed).*
 
 ---
 
-## Indeks Reputasi Undiksha per Aspek
+## 🔒 Etika Penelitian & Perlindungan Data
 
-| Aspek | Indeks | Predikat |
-|-------|--------|----------|
-| lainnya | +45.99% | Positif |
-| citra_umum | +38.03% | Positif |
-| akademik | +29.82% | Positif |
-| kemahasiswaan | +19.44% | Netral/Moderat |
-| karier | +10.45% | Netral/Moderat |
-| fasilitas | +9.43% | Netral/Moderat |
-| biaya | +1.71% | Netral/Moderat |
-| layanan | +1.28% | Netral/Moderat |
-
-**Indeks Keseluruhan: +43.60% (Positif)**
+* **Anonimisasi Identitas**: Seluruh identitas pengguna (*username*, akun *author*) disamarkan secara ireversibel menggunakan hashing kriptografi **SHA-256**.
+* **Proteksi Akses**: Kredensial, kunci API, dan sesi penjelajahan disimpan secara lokal pada `.env` dan `configs/sessions/` dan telah dikecualikan dari pelacakan git (`.gitignore`).
+* **Kepatuhan Data**: Pengambilan data dibatasi pada postingan publik berbasis tagar resmi `#undiksha` untuk kebutuhan riset institusi akademis.
 
 ---
 
-## Reproducibility
+## 📝 Lisensi & Hak Cipta
 
-Semua percobaan menggunakan **seed = 42** (dikonfigurasi di `configs/config.yaml`).
-
-```python
-from src.utils import set_seed, load_config
-config = load_config("configs/config.yaml")
-set_seed(config["seed"])
-```
-
----
-
-## Etika & Privasi
-
-- Username dan ID pengguna di-hash SHA-256 sebelum disimpan
-- Data mentah tidak di-commit ke repositori
-- API key disimpan di `.env` (tidak di-commit)
-- Hanya menggunakan API resmi dan dataset publik sesuai ToS
-
----
-
-## Lisensi & Penggunaan Data
-
-Data hasil analisis hanya untuk keperluan akademis. 
+Proyek ini dikembangkan di bawah naungan **Unit Penunjang Akademik Teknologi Informasi dan Komunikasi (UPA TIK) Universitas Pendidikan Ganesha**. Seluruh kode sumber dan data hasil analisis dirilis di bawah lisensi institusional untuk keperluan akademis, riset, dan pengembangan sistem pemantauan kampus.

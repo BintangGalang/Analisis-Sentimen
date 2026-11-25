@@ -49,6 +49,7 @@ async def collect_tweets_async(
     n_per_keyword: int = 100,
     output_dir: str | Path = "data/raw",
     account_db: str = "data/raw/twitter_accounts.db",
+    days: int | None = None,
 ) -> pd.DataFrame:
     """Mengumpulkan tweet real menggunakan twscrape.
 
@@ -57,6 +58,7 @@ async def collect_tweets_async(
         n_per_keyword: Jumlah tweet per keyword.
         output_dir: Direktori output.
         account_db: Path ke database akun twscrape.
+        days: Batas rentang waktu hari ke belakang (misal: 7 untuk seminggu terakhir).
 
     Returns:
         DataFrame berformat STANDARD_COLUMNS.
@@ -84,9 +86,16 @@ async def collect_tweets_async(
     all_rows = []
     seen_ids: set[str] = set()
 
+    from datetime import timedelta
+    since_clause = ""
+    if days is not None and days > 0:
+        since_date = (datetime.now(timezone.utc) - timedelta(days=days)).strftime("%Y-%m-%d")
+        since_clause = f" since:{since_date}"
+        logger.info("Filter rentang waktu aktif: mengambil tweet sejak %s (%d hari terakhir).", since_date, days)
+
     for keyword in keywords:
-        logger.info("Mengumpulkan tweet untuk keyword: '%s' (%d tweets)", keyword, n_per_keyword)
-        query = keyword
+        query = f"{keyword}{since_clause}"
+        logger.info("Mengumpulkan tweet untuk query: '%s' (%d tweets)", query, n_per_keyword)
         count = 0
         try:
             async for tweet in api.search(query, limit=n_per_keyword):
@@ -225,6 +234,7 @@ def main() -> None:
     parser.add_argument("--add-cookie", action="store_true", help="Tambah akun Twitter via Cookie browser (Bypass Cloudflare).")
     parser.add_argument("--collect", action="store_true", help="Kumpulkan tweet real Undiksha.")
     parser.add_argument("--count", type=int, default=150, help="Jumlah tweet per keyword (default: 150).")
+    parser.add_argument("--days", type=int, default=None, help="Ambil tweet dalam N hari terakhir (misal: 7).")
     parser.add_argument("--output-dir", default="data/raw", help="Direktori output data mentah.")
     parser.add_argument("--account-db", default="data/raw/twitter_accounts.db", help="Path database akun twscrape.")
     args = parser.parse_args()
@@ -239,6 +249,7 @@ def main() -> None:
             n_per_keyword=args.count,
             output_dir=args.output_dir,
             account_db=args.account_db,
+            days=args.days,
         ))
         print(f"\nTotal tweet real terkumpul: {len(df)}")
         for i, r in df.head(5).iterrows():

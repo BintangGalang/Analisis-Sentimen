@@ -144,27 +144,79 @@ def build_standard_row(
 
 
 def save_raw(df: pd.DataFrame, platform: str, raw_dir: str | Path) -> Path:
-    """Menyimpan DataFrame ke direktori data/raw/ dalam format CSV.
+    """Menyimpan DataFrame ke direktori data/raw/ dalam format JSONL standar (seragam dengan seluruh platform).
 
-    Format nama file: ``{platform}_raw_{YYYYMMDD}.csv``
+    Format nama file: ``{platform}_raw.jsonl`` (append atau tulis).
 
     Args:
         df       : DataFrame dengan skema STANDARD_COLUMNS.
-        platform : Nama platform.
-        raw_dir  : Path direktori output.
+        platform : Nama platform (youtube, twitter, dll).
+        raw_dir  : Path direktori output data/raw.
 
     Returns:
-        Path file yang disimpan.
+        Path file JSONL yang disimpan.
     """
+    import json
     raw_dir = Path(raw_dir)
     raw_dir.mkdir(parents=True, exist_ok=True)
 
-    date_str = datetime.now(timezone.utc).strftime("%Y%m%d")
-    out_path = raw_dir / f"{platform}_raw_{date_str}.csv"
+    jsonl_path = raw_dir / f"{platform}_raw.jsonl"
+    existing_ids = set()
+    if jsonl_path.exists():
+        try:
+            with open(jsonl_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line:
+                        obj = json.loads(line)
+                        if "id" in obj:
+                            existing_ids.add(str(obj["id"]))
+        except Exception:
+            pass
 
-    df.to_csv(out_path, index=False, encoding="utf-8-sig")
-    logger.info("Data %s disimpan: %s (%d baris)", platform, out_path, len(df))
-    return out_path
+    new_count = 0
+    with open(jsonl_path, "a", encoding="utf-8") as f:
+        for _, r in df.iterrows():
+            content = str(r.get("text", r.get("content", ""))).strip()
+            if not content or content == "nan":
+                continue
+            row_id = str(r.get("id_anon", r.get("id", ""))).strip()
+            if not row_id or row_id == "nan":
+                row_id = hashlib.sha256(content.encode()).hexdigest()[:16]
+
+            if row_id in existing_ids:
+                continue
+
+            existing_ids.add(row_id)
+            new_count += 1
+            data_type = "comment" if ("video_id_anon" in r or "parent_id" in r or platform == "youtube") else "post"
+            rec = {
+                "id": row_id,
+                "platform": platform,
+                "data_type": data_type,
+                "parent_id": str(r.get("video_id_anon", r.get("parent_id", ""))) if pd.notna(r.get("video_id_anon", r.get("parent_id"))) else None,
+                "author": str(r.get("author", row_id[:16])),
+                "content": content,
+                "clean_content": None,
+                "created_at": str(r.get("created_at", "")) if pd.notna(r.get("created_at")) else None,
+                "url": str(r.get("url", "")) if pd.notna(r.get("url")) else None,
+                "engagement": {
+                    "likes": int(float(r.get("like_count", r.get("likes", 0)) or 0)),
+                    "comments_count": 0,
+                    "shares": 0,
+                    "views": 0,
+                },
+                "hashtag_query": "#undiksha",
+                "scraped_at": str(r.get("collected_at", r.get("scraped_at", ""))) if pd.notna(r.get("collected_at", r.get("scraped_at"))) else None,
+                "metadata": {
+                    "is_official": bool(r.get("is_official", False)),
+                    "is_spam_flag": bool(r.get("is_spam_flag", False)),
+                }
+            }
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+
+    logger.info("Data %s disimpan dalam format JSONL: %s (+%d baris baru)", platform, jsonl_path, new_count)
+    return jsonl_path
 
 
 # ─────────────────────────────────────────────────────────────

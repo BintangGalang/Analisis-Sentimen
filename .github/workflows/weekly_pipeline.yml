@@ -1,0 +1,41 @@
+name: Pemantauan Isu Mingguan Undiksha
+
+on:
+  schedule:
+    # Berjalan otomatis setiap hari Senin pukul 02:00 UTC (10:00 WITA)
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # Memungkinkan eksekusi manual kapan saja dari antarmuka GitHub
+
+jobs:
+  run-weekly-monitoring:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Jalankan Pipeline Pemantauan Isu Mingguan
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: |
+          python -m src.pipeline.weekly_run --days 7
+
+      - name: Commit dan Push Hasil Prediksi & Isu Terbaru
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/raw/weekly/ data/processed/weekly_predictions.parquet data/processed/weekly_issues.csv logs/
+          git diff --staged --quiet || git commit -m "chore(auto): update pemantauan isu mingguan $(date +'%Y-%m-%d')"
+          git push
+
